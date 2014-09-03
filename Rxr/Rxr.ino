@@ -1,9 +1,14 @@
-#include <TimerOne.h>
+#include "NewTimerOne.h"
 #include <SPI.h>
 #include <Mirf.h>
 #include <MirfHardwareSpiDriver.h>
 #include <MirfSpiDriver.h>
 #include <nRF24L01.h>
+#include "Settings.h"
+#include <EEPROM.h>
+#include <CmdMessenger.h>
+#include "Console.h"
+
  
 // pin macros
 #define CLR(x,y)            ( PORT ## x&=(~(1<<y)) )
@@ -138,6 +143,8 @@ inline void trySleep(){
     counter = 0;
   }
 }
+
+Console console;
  
 void setup(){
   SET_MODE(SLEEP_PIN, OUT);
@@ -167,6 +174,7 @@ void setup(){
   ANT_CTRL1(SET);
   ANT_CTRL1(CLR);
  
+  console.Init();
   Serial.println("exiting setup");
 }
  
@@ -179,10 +187,13 @@ void loop(){
    //  }
    //  Serial.println(velocity);
    //}
-   //trySleep();
+   //trySleep(); 
+   
   if(Mirf.dataReady()){ // Got packet
     long position1 = 0;
     Mirf.getData((byte *) &position1);
     pos = MAKE_FIXED(position1);
   }
+  
+  console.Run();
 }
