@@ -25,6 +25,7 @@
 #include <Mirf.h>
 #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
+#include "RollingAverager.h"
 
 
 Q_DEFINE_THIS_FILE
@@ -59,6 +60,7 @@ Q_DEFINE_THIS_FILE
 
 static Encoder encoder(1,2);
 static int PrevButtonState = 0;
+rollingaveragernamespace::RollingAverager aAvg(analogRead(A0));
 
 
 #ifdef Q_SPY
@@ -159,8 +161,9 @@ void QF::onIdle() {
 }
 
 void BSP_UpdateRxProxy(long pos)
-{
+{  
   if (!Mirf.isSending()) {
+    pos *= 8;    // todo: explain this, remove magic number, still needed?
     Mirf.send((byte *)&pos);
   }
 }
@@ -171,8 +174,8 @@ long BSP_GetEncoder()
 }
 
 int BSP_GetPot()
-{
-  return analogRead(A0);
+{  
+  return aAvg.Roll(analogRead(A0));
 }
 
 //............................................................................
