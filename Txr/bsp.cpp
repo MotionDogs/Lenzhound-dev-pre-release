@@ -60,6 +60,7 @@ Q_DEFINE_THIS_FILE
 
 static Encoder encoder(1,2);
 static int PrevButtonState = 0;
+static int PrevModeState = -1;  // force signal on startup with -1
 rollingaveragernamespace::RollingAverager aAvg(analogRead(A0));
 
 
@@ -86,6 +87,21 @@ ISR(TIMER4_COMPA_vect) {
       }
        
       PrevButtonState = curButtonState;
+    }
+    
+    //Check mode switches
+    curButtonState = MODE_SWITCHES();
+    if (curButtonState != PrevModeState) {
+      if (curButtonState & 0x40) {
+        QF::PUBLISH(Q_NEW(QEvt, PLAY_MODE_SIG), &l_TIMER2_COMPA);
+      } 
+      else if (curButtonState & 0x10) {
+        QF::PUBLISH(Q_NEW(QEvt, FREE_MODE_SIG), &l_TIMER2_COMPA);
+      }
+      else {
+        QF::PUBLISH(Q_NEW(QEvt, Z_MODE_SIG), &l_TIMER2_COMPA);
+      }
+      PrevModeState = curButtonState;
     }
 }
 

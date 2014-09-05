@@ -28,31 +28,30 @@
 
 
 // Local-scope objects -------------------------------------------------------
-static QEvt const *l_pelicanQueueSto[2];
-static QEvt const *l_pedQueueSto[3];
-static QEvt const *blinky_queueSto[10]; // alocate event queue buffer
-static QSubscrList l_subscrSto[MAX_PUB_SIG];
+static QEvt const *txrQueueSto[10];
+static QEvt const *blinkyQueueSto[10]; // alocate event queue buffer
+static QSubscrList subscrSto[MAX_PUB_SIG];
 
-static QF_MPOOL_EL(QEvt) l_smlPoolSto[10]; // storage for the small event pool
+static QF_MPOOL_EL(QEvt) smlPoolSto[10]; // storage for the small event pool
 
 //............................................................................
 void setup() {
-    BSP_init();                                          // initialize the BSP
 
-    QF::init();       // initialize the framework and the underlying RT kernel
+  // initialize the BSP  
+  BSP_init();                                          
 
-                                                  // initialize event pools...
-    QF::poolInit(l_smlPoolSto, sizeof(l_smlPoolSto), sizeof(l_smlPoolSto[0]));
+  // initialize the framework and the underlying RT kernel
+  QF::init();       
 
-    QF::psInit(l_subscrSto, Q_DIM(l_subscrSto));     // init publish-subscribe
+  // initialize event pools...
+  QF::poolInit(smlPoolSto, sizeof(smlPoolSto), sizeof(smlPoolSto[0]));
 
-                                                // start the active objects...
-    AO_Txr->start(1U, l_pelicanQueueSto, Q_DIM(l_pelicanQueueSto),
-                      (void *)0, 0U);
+  // init publish-subscribe
+  QF::psInit(subscrSto, Q_DIM(subscrSto));     
 
-    
-    AO_Blinky->start(2U, blinky_queueSto, Q_DIM(blinky_queueSto),
-                     (void *)0, 0U);        // start the Blinky active object
+  // start the active objects...
+  AO_Txr->start(1U, txrQueueSto, Q_DIM(txrQueueSto), (void *)0, 0U);
+  AO_Blinky->start(2U, blinkyQueueSto, Q_DIM(blinkyQueueSto), (void *)0, 0U);
 }
 
 //////////////////////////////////////////////////////////////////////////////

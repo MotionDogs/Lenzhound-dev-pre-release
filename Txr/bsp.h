@@ -29,9 +29,11 @@
 #define WHITE_LED_TOGGLE()     (PORTC ^= (1 << (7)))
 #define AMBER2_LED_ON()        (PORTD |= (1 << (7)))
 #define AMBER2_LED_OFF()       (PORTD &= ~(1 << (7)))
+#define AMBER2_LED_TOGGLE()    (PORTD ^= (1 << (7)))
 #define AMBER_LED_ON()         (PORTC |= (1 << (6)))
 #define AMBER_LED_OFF()        (PORTC &= ~(1 << (6)))
 #define AMBER_LED_TOGGLE()     (PORTC ^= (1 << (6)))
+#define RED_LED_TOGGLE()       (PORTD ^= (1 << (0)))
 #define ENC_GREEN_LED_ON()     (PORTB |= (1 << (6)))
 #define ENC_GREEN_LED_OFF()    (PORTB &= ~(1 << (6)))
 #define ENC_GREEN_LED_TOGGLE() (PORTB ^= (1 << (6)))
@@ -46,6 +48,7 @@
 #define CALBUTTON_ON()    (PINF & 0x01)
 #define PLAYSWITCH_ON()   (PIND & 0x10)
 #define FREESWITCH_ON()   (PIND & 0x40)
+#define MODE_SWITCHES()   (PIND & 0x50)  // to see if either have changed
 
 
 #define IS_ODD(val) ((val) % 2 == 1)

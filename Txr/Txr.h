@@ -16,6 +16,9 @@ using namespace QP;
 enum PelicanSignals {
     ENC_DOWN_SIG = Q_USER_SIG,
     ENC_UP_SIG,
+    PLAY_MODE_SIG,
+    FREE_MODE_SIG,
+    Z_MODE_SIG,
     MAX_PUB_SIG,  // the last published signal
 
     SEND_TIMEOUT_SIG,
