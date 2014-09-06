@@ -30,11 +30,11 @@
 #define SLEEP_PIN(verb)     ( verb(D,3) )
 #define ENABLE_PIN(verb)    ( verb(D,7) )
  
-// higher order stepping helpers
-#define EIGHTH_STEPS()  do { MS1_PIN(SET); MS2_PIN(SET); } while (0)
-#define QUARTER_STEPS() do { MS1_PIN(CLR); MS2_PIN(SET); } while (0)
-#define HALF_STEPS()    do { MS1_PIN(SET); MS2_PIN(CLR); } while (0)
-#define FULL_STEPS()    do { MS1_PIN(CLR); MS2_PIN(CLR); } while (0)
+
+#define EIGHTH_STEPS 3
+#define QUARTER_STEPS 2
+#define HALF_STEPS 1
+#define FULL_STEPS 0
  
 // 22.10 fixed point macros
 #define BITSHIFT  15
@@ -49,14 +49,15 @@
 #define SECOND_IN_MICROSECONDS  1000000
 #define PERIOD                  SECOND_IN_MICROSECONDS/ISR_FREQUENCY
 #define PERIOD_IN_MILLISECONDS  PERIOD/1000
- 
+
 // Serial constants
 #define SERIAL_BITS_PER_SECOND 9600
  
 const int kPiecewiseAccelSize = (1 << 8);
-const int kMaxAccel = 32L;
+const int kMaxAccel = 16L;
  
-FIXED decel = 32L;
+char microsteps = 0;
+FIXED decel = kMaxAccel;
 FIXED decel_denominator = FIXED_MULT(decel, MAKE_FIXED(2L));
 FIXED velocity = 0L;
 FIXED calculated_position = 0L;
@@ -65,6 +66,35 @@ FIXED motor_position = 0L;
 FIXED observed_position = 0L;
 
 FIXED piecewise_accel [kPiecewiseAccelSize] = { 0 };
+
+inline void SetMicrosteps(char step_definition) {
+  microsteps = step_definition;
+  switch (microsteps) {
+    case FULL_STEPS: {
+      MS1_PIN(CLR); 
+      MS2_PIN(CLR);
+      break;
+    }
+    case HALF_STEPS: {
+      MS1_PIN(SET); 
+      MS2_PIN(CLR);
+      break;
+    }
+    case QUARTER_STEPS: {
+      MS1_PIN(CLR); 
+      MS2_PIN(SET);
+      break;
+    }
+    case EIGHTH_STEPS: {
+      MS1_PIN(SET); 
+      MS2_PIN(SET);
+      break;
+    }
+    default: {
+      Serial.println("Bad microstep value.");
+    }
+  }
+}
 
 inline void InitializePiecewiseAccelArray() {
   piecewise_accel[0] = 1;
@@ -81,7 +111,7 @@ inline void ReadPositionFromSerial() {
   if (Serial.available() > 0) {
     char test = Serial.read();
     if (test != 'a'){   
-      observed_position = MAKE_FIXED((long(test) - 96) * 500L); 
+      observed_position = MAKE_FIXED((long(test) - 96) * 40L); 
     }
     Serial.println(calculated_position);
   }
@@ -196,7 +226,7 @@ void setup(){
  
   InitializePiecewiseAccelArray();
  
-  EIGHTH_STEPS(); 
+  SetMicrosteps(EIGHTH_STEPS); 
   SLEEP_PIN(SET);
   ENABLE_PIN(CLR);
   ANT_CTRL1(SET);
