@@ -37,7 +37,7 @@
 #define FULL_STEPS()    do { MS1_PIN(CLR); MS2_PIN(CLR); } while (0)
  
 // 22.10 fixed point macros
-#define BITSHIFT  10
+#define BITSHIFT  15
 #define FIXED long
 #define MAKE_FIXED(a) ((a)<<BITSHIFT)
 #define FIXED_MULT(a,b) (((a) * (b)) >> BITSHIFT)
@@ -45,7 +45,7 @@
 #define FIXED_ONE (MAKE_FIXED(1L))
  
 // ISR constants
-#define ISR_FREQUENCY           20000
+#define ISR_FREQUENCY           4000
 #define SECOND_IN_MICROSECONDS  1000000
 #define PERIOD                  SECOND_IN_MICROSECONDS/ISR_FREQUENCY
 #define PERIOD_IN_MILLISECONDS  PERIOD/1000
@@ -53,16 +53,47 @@
 // Serial constants
 #define SERIAL_BITS_PER_SECOND 9600
  
-#define LIMITER_LENGTH 500
+const int kPiecewiseAccelSize = (1 << 8);
+const int kMaxAccel = 32L;
  
-FIXED accel = 1L;
-FIXED decel = 3L;
-FIXED decel_denominator = FIXED_MULT(decel, MAKE_FIXED(2));
+FIXED decel = 32L;
+FIXED decel_denominator = FIXED_MULT(decel, MAKE_FIXED(2L));
 FIXED velocity = 0L;
 FIXED calculated_position = 0L;
 bool direction = 1;
 FIXED motor_position = 0L;
 FIXED observed_position = 0L;
+
+FIXED piecewise_accel [kPiecewiseAccelSize] = { 0 };
+
+inline void InitializePiecewiseAccelArray() {
+  piecewise_accel[0] = 1;
+  piecewise_accel[1] = kMaxAccel / 3L;
+  piecewise_accel[2] = 2L * kMaxAccel / 3L ;
+
+  for (int i = 3; i < kPiecewiseAccelSize; ++i)
+  {
+    piecewise_accel[i] = kMaxAccel;
+  }
+}
+
+inline void ReadPositionFromSerial() {
+  if (Serial.available() > 0) {
+    char test = Serial.read();
+    if (test != 'a'){   
+      observed_position = MAKE_FIXED((long(test) - 96) * 500L); 
+    }
+    Serial.println(calculated_position);
+  }
+}
+
+inline void ReadPositionFromRxr() {
+  long position = 0;
+  if(Mirf.dataReady()){ // Got packet
+    Mirf.getData((byte *) &position);
+    observed_position = MAKE_FIXED(position);
+  }
+}
  
 inline void Pulse() {
   STEP_PIN(SET); 
@@ -85,26 +116,21 @@ inline FIXED Abs(FIXED a) {
   return a < 0 ? -a : a;
 }
  
-FIXED pos = 0;
-inline FIXED getPosition() {
-  return pos;
-}
- 
 void tryStep() {
-  observed_position = getPosition();
   FIXED stepsToGo = Abs(observed_position - calculated_position);
   if(direction){
     if(calculated_position<observed_position){
       if(stepsToGo>
         FIXED_DIV(FIXED_MULT(velocity,velocity),decel_denominator))
-        velocity=min(velocity+accel,FIXED_ONE);
+        velocity=min(velocity+piecewise_accel[stepsToGo >> 24],FIXED_ONE);
       else
         velocity-=decel;
-    } else if(calculated_position!=observed_position) {
-      velocity=velocity-decel;   
+    } else if (calculated_position > observed_position) {
+      velocity-=decel;   
     }
     calculated_position+=velocity;
-    if(motor_position<calculated_position && motor_position!=observed_position){
+    if(motor_position<calculated_position && 
+      motor_position!=observed_position) {
       motor_position+=FIXED_ONE;
       Pulse();
     }
@@ -114,14 +140,15 @@ void tryStep() {
     if(calculated_position>observed_position){
       if(stepsToGo>
         FIXED_DIV(FIXED_MULT(velocity,velocity),decel_denominator))
-        velocity=max(velocity-accel, -FIXED_ONE);
+        velocity=max(velocity-piecewise_accel[stepsToGo >> 24], -FIXED_ONE);
       else
         velocity+=decel;
-    } else if(calculated_position!=observed_position) {
-      velocity=velocity+decel;
+    } else if (calculated_position < observed_position) {
+      velocity+=decel;
     }
     calculated_position+=velocity;
-    if(motor_position>calculated_position && motor_position!=observed_position){
+    if(motor_position>calculated_position && 
+      motor_position!=observed_position) {
       motor_position-=FIXED_ONE;
       Pulse();
     }
@@ -164,9 +191,10 @@ void setup(){
   Mirf.spi = &MirfHardwareSpi; 
   Mirf.init(); // Setup pins / SPI
   Mirf.setRADDR((byte *)"serv1"); // Configure recieving address
-  Mirf.payload = sizeof(pos); // Payload length
+  Mirf.payload = sizeof(observed_position); // Payload length
   Mirf.config(); // Power up reciver
  
+  InitializePiecewiseAccelArray();
  
   EIGHTH_STEPS(); 
   SLEEP_PIN(SET);
@@ -179,21 +207,6 @@ void setup(){
 }
  
 void loop(){
-   //if (Serial.available() > 0) {
-   //  //SLEEP_PIN(CLR);
-   //  char test = Serial.read();
-   //  if (test != 'a'){   
-   //    pos = MAKE_FIXED((long(test) - 96) * 500L); 
-   //  }
-   //  Serial.println(velocity);
-   //}
-   //trySleep(); 
-   
-  if(Mirf.dataReady()){ // Got packet
-    long position1 = 0;
-    Mirf.getData((byte *) &position1);
-    pos = MAKE_FIXED(position1);
-  }
-  
-  console.Run();
+  ReadPositionFromSerial();
+  //ReadPositionFromRxr();
 }
