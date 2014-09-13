@@ -10,6 +10,7 @@
 //****************************************************************************
 #include "qp_port.h"
 #include "bsp.h"
+#include "RollingAverager.h"
 #include "Txr.h"
 
 Q_DEFINE_THIS_FILE
@@ -230,5 +231,3 @@ QP::QState Txr::freeRun(Txr * const me, QP::QEvt const * const e) {
   }
   return status_;
 }
-
-

@@ -2,12 +2,12 @@
 
 namespace rollingaveragernamespace {
   
-void RollingAverager::Reset(int start_value) {
+void RollingAverager::Reset(long start_value) {
   buffer_index_ = 0;
   sum = 0;
   for (int i=0; i<kBufferSize; i++) {
-    buffer_[i]=startVal; 
-    sum += startVal;
+    buffer_[i]=start_value; 
+    sum += start_value;
   }
 }
 
