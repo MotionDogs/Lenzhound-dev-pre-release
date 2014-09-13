@@ -218,7 +218,7 @@ QP::QState Txr::freeRun(Txr * const me, QP::QEvt const * const e) {
       long pos = BSP_GetPot();
       // todo: remove magic numbers
       pos = map(pos,0,1023,me->mPos1,me->mPos2);
-      pos = averager.Roll(pos);
+      pos = me->averager.Roll(pos);
       BSP_UpdateRxProxy(pos);
       status_ = Q_HANDLED(); 
       break;
@@ -231,3 +231,6 @@ QP::QState Txr::freeRun(Txr * const me, QP::QEvt const * const e) {
   }
   return status_;
 }
+
+
+
