@@ -35,6 +35,7 @@ public QP::QActive {
 private:
   QTimeEvt mFlashTimeout;
   QTimeEvt mSendTimeout;
+  rollingaveragernamespace::RollingAverager averager;
   long mCurPos;
   long mPrevEncoderCnt;
   long mPos1;
@@ -216,6 +217,7 @@ QP::QState Txr::freeRun(Txr * const me, QP::QEvt const * const e) {
       long pos = BSP_GetPot();
       // todo: remove magic numbers
       pos = map(pos,0,1023,me->mPos1,me->mPos2);
+      pos = averager.Roll(pos);
       BSP_UpdateRxProxy(pos);
       status_ = Q_HANDLED(); 
       break;

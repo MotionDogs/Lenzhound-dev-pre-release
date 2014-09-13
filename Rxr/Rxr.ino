@@ -45,7 +45,7 @@
 #define FIXED_ONE (MAKE_FIXED(1L))
  
 // ISR constants
-#define ISR_FREQUENCY           4000
+#define ISR_FREQUENCY           8000
 #define SECOND_IN_MICROSECONDS  1000000
 #define PERIOD                  SECOND_IN_MICROSECONDS/ISR_FREQUENCY
 #define PERIOD_IN_MILLISECONDS  PERIOD/1000
@@ -54,7 +54,8 @@
 #define SERIAL_BITS_PER_SECOND 9600
  
 const int kPiecewiseAccelSize = (1 << 8);
-const int kMaxAccel = 16L;
+const FIXED kMaxAccel = 16L;
+const FIXED kMaxVelocity = 16000L;
  
 char microsteps = 0;
 FIXED decel = kMaxAccel;
@@ -66,6 +67,14 @@ FIXED motor_position = 0L;
 FIXED observed_position = 0L;
 
 FIXED piecewise_accel [kPiecewiseAccelSize] = { 0 };
+
+inline FIXED Max(FIXED a, FIXED b) {
+  return (a > b) ? a : b;
+}
+
+inline FIXED Min(FIXED a, FIXED b) {
+  return (a < b) ? a : b;
+}
 
 inline void SetMicrosteps(char step_definition) {
   microsteps = step_definition;
@@ -96,14 +105,14 @@ inline void SetMicrosteps(char step_definition) {
   }
 }
 
-inline void InitializePiecewiseAccelArray() {
-  piecewise_accel[0] = 1;
-  piecewise_accel[1] = kMaxAccel / 3L;
-  piecewise_accel[2] = 2L * kMaxAccel / 3L ;
+inline FIXED GetAccel(FIXED steps_to_go) {
+  return piecewise_accel[Min(steps_to_go, kPiecewiseAccelSize - 1)];
+}
 
-  for (int i = 3; i < kPiecewiseAccelSize; ++i)
+void InitializePiecewiseAccelArray() {
+  for (int i = 0; i < kPiecewiseAccelSize; ++i)
   {
-    piecewise_accel[i] = kMaxAccel;
+    piecewise_accel[i] = kMaxAccel * (double(i) / double(kPiecewiseAccelSize));
   }
 }
 
@@ -111,9 +120,8 @@ inline void ReadPositionFromSerial() {
   if (Serial.available() > 0) {
     char test = Serial.read();
     if (test != 'a'){   
-      observed_position = MAKE_FIXED((long(test) - 96) * 40L); 
+      observed_position = MAKE_FIXED((long(test) - 96) * 40L) >> 3; 
     }
-    Serial.println(calculated_position);
   }
 }
 
@@ -146,13 +154,14 @@ inline FIXED Abs(FIXED a) {
   return a < 0 ? -a : a;
 }
  
-void tryStep() {
-  FIXED stepsToGo = Abs(observed_position - calculated_position);
+void Run() {
+  DetermineSleepState();
+  FIXED steps_to_go = Abs(observed_position - calculated_position);
   if(direction){
     if(calculated_position<observed_position){
-      if(stepsToGo>
+      if(steps_to_go>
         FIXED_DIV(FIXED_MULT(velocity,velocity),decel_denominator))
-        velocity=min(velocity+piecewise_accel[stepsToGo >> 24],FIXED_ONE);
+        velocity=Min(velocity+GetAccel(steps_to_go), kMaxVelocity);
       else
         velocity-=decel;
     } else if (calculated_position > observed_position) {
@@ -168,9 +177,9 @@ void tryStep() {
       SetDirBackward();
   } else {
     if(calculated_position>observed_position){
-      if(stepsToGo>
+      if(steps_to_go>
         FIXED_DIV(FIXED_MULT(velocity,velocity),decel_denominator))
-        velocity=max(velocity-piecewise_accel[stepsToGo >> 24], -FIXED_ONE);
+        velocity=Max(velocity-GetAccel(steps_to_go), -kMaxVelocity);
       else
         velocity+=decel;
     } else if (calculated_position < observed_position) {
@@ -187,23 +196,21 @@ void tryStep() {
   }
 }
  
-inline void trySleep(){
-  static int counter = 0;
-  if (motor_position == observed_position){
-    if (counter == 500){
-      SLEEP_PIN(SET);
-    } else {
-      counter++;
-    }
-  }
-  else{
-    counter = 0;
+inline void DetermineSleepState(){
+  if (motor_position == observed_position && abs(velocity) <= decel) {
+    SLEEP_PIN(CLR); // this sleeps
+  } else {
+    SLEEP_PIN(SET); // this wakes
   }
 }
 
 Console console;
  
 void setup(){
+  Serial.begin(SERIAL_BITS_PER_SECOND);
+  while(!Serial) {}
+  Serial.println("entering setup");
+  
   SET_MODE(SLEEP_PIN, OUT);
   SET_MODE(ENABLE_PIN, OUT);
   SET_MODE(MS1_PIN, OUT);
@@ -214,9 +221,7 @@ void setup(){
   SET_MODE(ANT_CTRL2, OUT);
  
   Timer1.initialize();
-  Timer1.attachInterrupt(tryStep, PERIOD);
- 
-  Serial.begin(SERIAL_BITS_PER_SECOND);
+  Timer1.attachInterrupt(Run, PERIOD);
  
   Mirf.spi = &MirfHardwareSpi; 
   Mirf.init(); // Setup pins / SPI
@@ -226,7 +231,7 @@ void setup(){
  
   InitializePiecewiseAccelArray();
  
-  SetMicrosteps(EIGHTH_STEPS); 
+  SetMicrosteps(FULL_STEPS); 
   SLEEP_PIN(SET);
   ENABLE_PIN(CLR);
   ANT_CTRL1(SET);
@@ -236,7 +241,9 @@ void setup(){
   Serial.println("exiting setup");
 }
  
-void loop(){
-  ReadPositionFromSerial();
-  //ReadPositionFromRxr();
+void loop() {
+  //ReadPositionFromSerial();
+  ReadPositionFromRxr();
 }
+
+

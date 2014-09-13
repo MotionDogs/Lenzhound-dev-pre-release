@@ -9,8 +9,9 @@ private:
   char buffer_index_;
   long buffer_[kBufferSize];
   long sum;
+  bool started;
 public:
-  RollingAverager(int startVal);
+  void Reset(long start_value);
   long Roll(long next_input);
 };
 

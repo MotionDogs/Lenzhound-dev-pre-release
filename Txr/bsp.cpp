@@ -61,8 +61,6 @@ Q_DEFINE_THIS_FILE
 static Encoder encoder(1,2);
 static int PrevButtonState = 0;
 static int PrevModeState = -1;  // force signal on startup with -1
-rollingaveragernamespace::RollingAverager aAvg(analogRead(A0));
-
 
 #ifdef Q_SPY
 uint8_t l_TIMER2_COMPA;
@@ -191,7 +189,7 @@ long BSP_GetEncoder()
 
 int BSP_GetPot()
 {  
-  return aAvg.Roll(analogRead(A0));
+  return analogRead(A0);
 }
 
 //............................................................................

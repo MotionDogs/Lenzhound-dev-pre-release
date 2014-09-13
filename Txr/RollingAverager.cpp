@@ -2,7 +2,7 @@
 
 namespace rollingaveragernamespace {
   
-RollingAverager::RollingAverager(int startVal) {
+void RollingAverager::Reset(int start_value) {
   buffer_index_ = 0;
   sum = 0;
   for (int i=0; i<kBufferSize; i++) {
@@ -12,6 +12,10 @@ RollingAverager::RollingAverager(int startVal) {
 }
 
 long RollingAverager::Roll(long next_input) {
+  if(!started) {
+    Reset(next_input);
+    started = true;
+  }
   ++buffer_index_;
   buffer_index_ &= (kBufferSize - 1);
   sum += next_input;
