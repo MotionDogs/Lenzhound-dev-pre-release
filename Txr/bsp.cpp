@@ -177,7 +177,6 @@ void QF::onIdle() {
 void BSP_UpdateRxProxy(long pos)
 {  
   if (!Mirf.isSending()) {
-    pos *= 8;    // todo: explain this, remove magic number, still needed?
     Mirf.send((byte *)&pos);
   }
 }

@@ -1,4 +1,5 @@
 #include "NewTimerOne.h"
+#include "RollingAverager.h"
 #include <SPI.h>
 #include <Mirf.h>
 #include <MirfHardwareSpiDriver.h>
@@ -30,7 +31,6 @@
 #define SLEEP_PIN(verb)     ( verb(D,3) )
 #define ENABLE_PIN(verb)    ( verb(D,7) )
  
-
 #define EIGHTH_STEPS 3
 #define QUARTER_STEPS 2
 #define HALF_STEPS 1
@@ -43,30 +43,39 @@
 #define FIXED_MULT(a,b) (((a) * (b)) >> BITSHIFT)
 #define FIXED_DIV(a,b) (((a) << BITSHIFT) / b)
 #define FIXED_ONE (MAKE_FIXED(1L))
- 
-// ISR constants
-#define ISR_FREQUENCY           8000
-#define SECOND_IN_MICROSECONDS  1000000
-#define PERIOD                  SECOND_IN_MICROSECONDS/ISR_FREQUENCY
-#define PERIOD_IN_MILLISECONDS  PERIOD/1000
 
 // Serial constants
 #define SERIAL_BITS_PER_SECOND 9600
- 
-const int kPiecewiseAccelSize = (1 << 8);
-const FIXED kMaxAccel = 16L;
-const FIXED kMaxVelocity = 16000L;
- 
-char microsteps = 0;
-FIXED decel = kMaxAccel;
+
+#define USE_SERIAL_INPUT false
+
+const int kLimiterArraySize = (1 << 4);
+const FIXED kMaxAccel = 8L;
+const FIXED kMaxVelocity = 32000L;
+const FIXED kAccelIndexShift = 5;
+const char kMicrosteps = QUARTER_STEPS;
+
+// ISR constants
+const long kSecondsInMicroseconds = 1000000L;
+const long kIsrFrequency = 2000L << kMicrosteps;
+const long kPeriod = kSecondsInMicroseconds/kIsrFrequency;
+
+rollingaveragernamespace::RollingAverager time_averager;
+rollingaveragernamespace::RollingAverager delta_averager;
+FIXED isr_count = 0L;
+FIXED estimated_receiver_interval = MAKE_FIXED(10L);
+FIXED decel = kMaxAccel / 2;
 FIXED decel_denominator = FIXED_MULT(decel, MAKE_FIXED(2L));
 FIXED velocity = 0L;
 FIXED calculated_position = 0L;
 bool direction = 1;
 FIXED motor_position = 0L;
 FIXED observed_position = 0L;
+FIXED current_delta = 0L;
+FIXED previous_target = 0L;
 
-FIXED piecewise_accel [kPiecewiseAccelSize] = { 0 };
+FIXED piecewise_accel [kLimiterArraySize] = { 0 };
+FIXED velocity_limiter [kLimiterArraySize] = { 0 };
 
 inline FIXED Max(FIXED a, FIXED b) {
   return (a > b) ? a : b;
@@ -76,8 +85,7 @@ inline FIXED Min(FIXED a, FIXED b) {
   return (a < b) ? a : b;
 }
 
-inline void SetMicrosteps(char step_definition) {
-  microsteps = step_definition;
+inline void SetMicrosteps(char microsteps) {
   switch (microsteps) {
     case FULL_STEPS: {
       MS1_PIN(CLR); 
@@ -105,32 +113,48 @@ inline void SetMicrosteps(char step_definition) {
   }
 }
 
-inline FIXED GetAccel(FIXED steps_to_go) {
-  return piecewise_accel[Min(steps_to_go, kPiecewiseAccelSize - 1)];
+inline bool WeArePastDecelerationThreshold(FIXED steps_to_go) {
+  return steps_to_go <= FIXED_DIV(
+    FIXED_MULT(velocity,velocity),decel_denominator);
 }
 
-void InitializePiecewiseAccelArray() {
-  for (int i = 0; i < kPiecewiseAccelSize; ++i)
-  {
-    piecewise_accel[i] = kMaxAccel * (double(i) / double(kPiecewiseAccelSize));
+inline FIXED GetAccel(FIXED current_delta) {
+  return piecewise_accel[Min(current_delta >> kAccelIndexShift, 
+    kLimiterArraySize - 1)];
+}
+
+inline FIXED GetSpeedCap() {
+  return current_delta / estimated_receiver_interval;
+}
+
+void InitializeLimiterArrays() {
+  for (int i = 0; i < kLimiterArraySize; ++i) {
+    //piecewise_accel[i] = kMaxAccel * (double(i) / double(kLimiterArraySize));
+    piecewise_accel[i] = kMaxAccel;
+    piecewise_accel[i] = Max(1, piecewise_accel[i]);
   }
 }
 
-inline void ReadPositionFromSerial() {
-  if (Serial.available() > 0) {
-    char test = Serial.read();
-    if (test != 'a'){   
-      observed_position = MAKE_FIXED((long(test) - 96) * 40L) >> 3; 
-    }
+inline void ReadPosition() {
+  long position = observed_position >> kMicrosteps;
+  if (USE_SERIAL_INPUT) {
+    if (Serial.available() > 0) {
+      char test = Serial.read();
+      if (test != 'a'){   
+        position = MAKE_FIXED((long(test) - 96) * 1L); 
+      }
+    } 
+  } else {
+    if(Mirf.dataReady()){ // Got packet
+      Mirf.getData((byte *) &position);
+      position = MAKE_FIXED(position);
+    }    
   }
-}
-
-inline void ReadPositionFromRxr() {
-  long position = 0;
-  if(Mirf.dataReady()){ // Got packet
-    Mirf.getData((byte *) &position);
-    observed_position = MAKE_FIXED(position);
-  }
+  estimated_receiver_interval = time_averager.Roll(isr_count);
+  isr_count = 0;
+  previous_target = observed_position;
+  observed_position = position << kMicrosteps;
+  current_delta = delta_averager.Roll(Abs(observed_position-previous_target));
 }
  
 inline void Pulse() {
@@ -155,17 +179,16 @@ inline FIXED Abs(FIXED a) {
 }
  
 void Run() {
-  DetermineSleepState();
+  //DetermineSleepState();
+  isr_count++;
   FIXED steps_to_go = Abs(observed_position - calculated_position);
   if(direction){
-    if(calculated_position<observed_position){
-      if(steps_to_go>
-        FIXED_DIV(FIXED_MULT(velocity,velocity),decel_denominator))
-        velocity=Min(velocity+GetAccel(steps_to_go), kMaxVelocity);
-      else
-        velocity-=decel;
-    } else if (calculated_position > observed_position) {
-      velocity-=decel;   
+    if(calculated_position > observed_position || 
+      WeArePastDecelerationThreshold(steps_to_go) || 
+      (steps_to_go < delta_averager.get_sum() && velocity > GetSpeedCap())) {
+      velocity-=decel;
+    } else if (calculated_position < observed_position) {
+      velocity=Min(velocity+GetAccel(current_delta), kMaxVelocity);
     }
     calculated_position+=velocity;
     if(motor_position<calculated_position && 
@@ -176,14 +199,12 @@ void Run() {
     if(velocity < 0)
       SetDirBackward();
   } else {
-    if(calculated_position>observed_position){
-      if(steps_to_go>
-        FIXED_DIV(FIXED_MULT(velocity,velocity),decel_denominator))
-        velocity=Max(velocity-GetAccel(steps_to_go), -kMaxVelocity);
-      else
-        velocity+=decel;
-    } else if (calculated_position < observed_position) {
+    if(calculated_position < observed_position || 
+      WeArePastDecelerationThreshold(steps_to_go) || 
+      (steps_to_go < delta_averager.get_sum() && (-velocity) > GetSpeedCap())){
       velocity+=decel;
+    } else if (calculated_position > observed_position) {
+      velocity=Min(velocity-GetAccel(current_delta), kMaxVelocity);
     }
     calculated_position+=velocity;
     if(motor_position>calculated_position && 
@@ -208,7 +229,9 @@ Console console;
  
 void setup(){
   Serial.begin(SERIAL_BITS_PER_SECOND);
-  while(!Serial) {}
+  //if (USE_SERIAL_INPUT) {
+    while(!Serial) {}
+  //}
   Serial.println("entering setup");
   
   SET_MODE(SLEEP_PIN, OUT);
@@ -221,7 +244,7 @@ void setup(){
   SET_MODE(ANT_CTRL2, OUT);
  
   Timer1.initialize();
-  Timer1.attachInterrupt(Run, PERIOD);
+  Timer1.attachInterrupt(Run, kPeriod);
  
   Mirf.spi = &MirfHardwareSpi; 
   Mirf.init(); // Setup pins / SPI
@@ -229,21 +252,26 @@ void setup(){
   Mirf.payload = sizeof(observed_position); // Payload length
   Mirf.config(); // Power up reciver
  
-  InitializePiecewiseAccelArray();
+  InitializeLimiterArrays();
  
-  SetMicrosteps(FULL_STEPS); 
+  SetMicrosteps(kMicrosteps); 
   SLEEP_PIN(SET);
   ENABLE_PIN(CLR);
   ANT_CTRL1(SET);
   ANT_CTRL1(CLR);
  
   console.Init();
-  Serial.println("exiting setup");
+  Serial.println("exiting setup v6");
 }
  
 void loop() {
-  //ReadPositionFromSerial();
-  ReadPositionFromRxr();
+  ReadPosition();
 }
+
+
+
+
+
+
 
 
