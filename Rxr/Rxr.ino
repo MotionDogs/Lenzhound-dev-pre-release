@@ -31,38 +31,39 @@
 #define SLEEP_PIN(verb)     ( verb(D,3) )
 #define ENABLE_PIN(verb)    ( verb(D,7) )
  
-#define EIGHTH_STEPS 3
-#define QUARTER_STEPS 2
-#define HALF_STEPS 1
-#define FULL_STEPS 0
+#define EIGHTH_STEPS    3
+#define QUARTER_STEPS   2
+#define HALF_STEPS      1
+#define FULL_STEPS      0
  
 // 22.10 fixed point macros
-#define BITSHIFT  15
-#define FIXED long
-#define MAKE_FIXED(a) ((a)<<BITSHIFT)
+#define BITSHIFT        15
+#define FIXED           long
+#define MAKE_FIXED(a)   ((a)<<BITSHIFT)
 #define FIXED_MULT(a,b) (((a) * (b)) >> BITSHIFT)
-#define FIXED_DIV(a,b) (((a) << BITSHIFT) / b)
-#define FIXED_ONE (MAKE_FIXED(1L))
+#define FIXED_DIV(a,b)  (((a) << BITSHIFT) / b)
+#define FIXED_ONE       (MAKE_FIXED(1L))
 
 // Serial constants
 #define SERIAL_BITS_PER_SECOND 9600
 
 #define USE_SERIAL_INPUT false
 
-const int kLimiterArraySize = (1 << 4);
-const FIXED kMaxAccel = 8L;
-const FIXED kMaxVelocity = 32000L;
-const FIXED kAccelIndexShift = 5;
-const char kMicrosteps = QUARTER_STEPS;
+const char kMicrosteps          = HALF_STEPS;
+const int kLimiterArraySize     = (1 << 4);
+const FIXED kMaxAccel           = 32L << kMicrosteps;
+const FIXED kMinAccel           = 32L << kMicrosteps;
+const FIXED kMaxVelocity        = 5000L << kMicrosteps;
+const FIXED kAccelIndexShift    = 14;
 
 // ISR constants
 const long kSecondsInMicroseconds = 1000000L;
-const long kIsrFrequency = 2000L << kMicrosteps;
-const long kPeriod = kSecondsInMicroseconds/kIsrFrequency;
+const long kIsrFrequency          = 6000L;
+const long kPeriod                = kSecondsInMicroseconds/kIsrFrequency;
 
 rollingaveragernamespace::RollingAverager time_averager;
 rollingaveragernamespace::RollingAverager delta_averager;
-FIXED isr_count = 0L;
+FIXED isr_count = 0;
 FIXED estimated_receiver_interval = MAKE_FIXED(10L);
 FIXED decel = kMaxAccel / 2;
 FIXED decel_denominator = FIXED_MULT(decel, MAKE_FIXED(2L));
@@ -128,10 +129,10 @@ inline FIXED GetSpeedCap() {
 }
 
 void InitializeLimiterArrays() {
+  FIXED accel_range = kMaxAccel - kMinAccel;
   for (int i = 0; i < kLimiterArraySize; ++i) {
-    //piecewise_accel[i] = kMaxAccel * (double(i) / double(kLimiterArraySize));
-    piecewise_accel[i] = kMaxAccel;
-    piecewise_accel[i] = Max(1, piecewise_accel[i]);
+    piecewise_accel[i] = kMinAccel +
+      accel_range * (double(i) / double(kLimiterArraySize));
   }
 }
 
@@ -151,10 +152,10 @@ inline void ReadPosition() {
     }    
   }
   estimated_receiver_interval = time_averager.Roll(isr_count);
-  isr_count = 0;
   previous_target = observed_position;
   observed_position = position << kMicrosteps;
   current_delta = delta_averager.Roll(Abs(observed_position-previous_target));
+  isr_count = 0;
 }
  
 inline void Pulse() {
@@ -179,8 +180,8 @@ inline FIXED Abs(FIXED a) {
 }
  
 void Run() {
-  //DetermineSleepState();
   isr_count++;
+  //DetermineSleepState();
   FIXED steps_to_go = Abs(observed_position - calculated_position);
   if(direction){
     if(calculated_position > observed_position || 
@@ -204,7 +205,7 @@ void Run() {
       (steps_to_go < delta_averager.get_sum() && (-velocity) > GetSpeedCap())){
       velocity+=decel;
     } else if (calculated_position > observed_position) {
-      velocity=Min(velocity-GetAccel(current_delta), kMaxVelocity);
+      velocity=Max(velocity-GetAccel(current_delta), -kMaxVelocity);
     }
     calculated_position+=velocity;
     if(motor_position>calculated_position && 
@@ -229,9 +230,9 @@ Console console;
  
 void setup(){
   Serial.begin(SERIAL_BITS_PER_SECOND);
-  //if (USE_SERIAL_INPUT) {
+  if (USE_SERIAL_INPUT) {
     while(!Serial) {}
-  //}
+  }
   Serial.println("entering setup");
   
   SET_MODE(SLEEP_PIN, OUT);
@@ -261,17 +262,10 @@ void setup(){
   ANT_CTRL1(CLR);
  
   console.Init();
-  Serial.println("exiting setup v6");
+  Serial.println("exiting setup");
 }
  
 void loop() {
   ReadPosition();
 }
-
-
-
-
-
-
-
 
