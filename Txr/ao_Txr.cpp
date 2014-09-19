@@ -21,7 +21,8 @@ Q_DEFINE_THIS_FILE
 // various timeouts in ticks
 enum TxrTimeouts {                            
   SEND_ENCODER_TOUT  = BSP_TICKS_PER_SEC / 100,     // how often to send encoder position
-  FLASH_LED_TOUT = BSP_TICKS_PER_SEC / 2
+  FLASH_LED_TOUT = BSP_TICKS_PER_SEC / 2,           // how quick to flash LED
+  ENTER_CALIBRATION_TOUT = BSP_TICKS_PER_SEC * 2    // how long to hold calibration button before reentering calibration
 };
 
 // todo: move this somewhere else or do differently
@@ -36,25 +37,28 @@ public QP::QActive {
 private:
   QTimeEvt mFlashTimeout;
   QTimeEvt mSendTimeout;
+  QTimeEvt mCalibrationTimeout;
   rollingaveragernamespace::RollingAverager averager;
   float mCurPos;
   long mPrevPos;  // used to prevent jitter
   long mPrevEncoderCnt;
-  long mPos1;
-  long mPos2;
+  long mCalibrationPos1;
+  long mCalibrationPos2;
   char mEncPushes;
   char mCalibrationMultiplier;
 
 public:
   Txr() : 
   QActive((QStateHandler)&Txr::initial), 
-  mFlashTimeout(FLASH_TIMEOUT_SIG), mSendTimeout(SEND_TIMEOUT_SIG)
+  mFlashTimeout(FLASH_TIMEOUT_SIG), mSendTimeout(SEND_TIMEOUT_SIG),
+  mCalibrationTimeout(ENTER_CALIBRATION_SIG)
   {
   }
 
 protected:
   static QP::QState initial(Txr * const me, QP::QEvt const * const e);
-  static QP::QState calibration(Txr * const me, QP::QEvt const * const e);
+  static QP::QState uncalibrated(Txr * const me, QP::QEvt const * const e);
+  static QP::QState calibrated(Txr * const me, QP::QEvt const * const e);
   static QP::QState flashing(Txr * const me, QP::QEvt const * const e);
   static QP::QState freeRun(Txr * const me, QP::QEvt const * const e);
   void UpdatePosition(Txr *const me);
@@ -85,7 +89,7 @@ void Txr::UpdatePosition(Txr *const me)
 {
   long newPos = BSP_GetPot();
   // todo: remove magic numbers and explain this
-  newPos = map(newPos,0,1023,me->mPos1,me->mPos2);
+  newPos = map(newPos,0,1023,me->mCalibrationPos1,me->mCalibrationPos2);
   newPos = me->averager.Roll(newPos);
   
   // only update the current position if it's not jittering between two values
@@ -106,10 +110,10 @@ QP::QState Txr::initial(Txr * const me, QP::QEvt const * const e) {
   me->subscribe(FREE_MODE_SIG);
   me->subscribe(Z_MODE_SIG);
   me->mSendTimeout.postEvery(me, SEND_ENCODER_TOUT);
-  return Q_TRAN(&calibration);
+  return Q_TRAN(&uncalibrated);
 }
 
-QP::QState Txr::calibration(Txr * const me, QP::QEvt const * const e) {
+QP::QState Txr::uncalibrated(Txr * const me, QP::QEvt const * const e) {
   QP::QState status_;
   switch (e->sig) {
     case Q_ENTRY_SIG: 
@@ -132,15 +136,15 @@ QP::QState Txr::calibration(Txr * const me, QP::QEvt const * const e) {
     case ENC_DOWN_SIG: 
     {
       if ((me->mEncPushes)++ == 0) {
-        me->mPos1 = BSP_GetEncoder();
+        me->mCalibrationPos1 = me->mCurPos;
       }
       else {
-        me->mPos2 = BSP_GetEncoder();
+        me->mCalibrationPos2 = me->mCurPos;
         // todo: factor this out
-        if (me->mPos1 > me->mPos2) {
-          long pos = me->mPos1;
-          me->mPos1 = me->mPos2;
-          me->mPos2 = pos;
+        if (me->mCalibrationPos1 > me->mCalibrationPos2) {
+          long pos = me->mCalibrationPos1;
+          me->mCalibrationPos1 = me->mCalibrationPos2;
+          me->mCalibrationPos2 = pos;
         }
       }
       status_ = Q_TRAN(&flashing);
@@ -173,6 +177,63 @@ QP::QState Txr::calibration(Txr * const me, QP::QEvt const * const e) {
   return status_;
 }
 
+QP::QState Txr::calibrated(Txr * const me, QP::QEvt const * const e) {
+  QP::QState status_;
+  switch (e->sig) {
+    case Q_ENTRY_SIG:
+    {
+      status_ = Q_HANDLED();
+      break;
+    }
+    case Q_EXIT_SIG:
+    {
+      status_ = Q_HANDLED();
+      break;
+    }
+    case ENC_DOWN_SIG:
+    {
+      // somehow reenter calibration if held down for 2 seconds
+      me->mCalibrationTimeout.postIn(me, ENTER_CALIBRATION_TOUT);
+      status_ = Q_HANDLED();
+      break;
+    }
+    case ENC_UP_SIG:
+    {
+      // if they released the button before the time is up, stop waiting for the timeout
+      me->mCalibrationTimeout.disarm();
+      status_ = Q_HANDLED();
+      break;
+    }
+    case ENTER_CALIBRATION_SIG:
+    {
+      me->mEncPushes = 0;
+      status_ = Q_TRAN(&flashing);
+      break;
+    }
+    case PLAY_MODE_SIG:
+    {
+      status_ = Q_HANDLED();
+      break;
+    }
+    case Z_MODE_SIG:
+    {
+      status_ = Q_HANDLED();
+      break;
+    }
+    case FREE_MODE_SIG:
+    {
+      status_ = Q_HANDLED();
+      break;
+    }
+    default:
+    {
+      status_ = Q_SUPER(&QP::QHsm::top);
+      break;
+    }
+  }
+  return status_;
+}
+
 QP::QState Txr::flashing(Txr * const me, QP::QEvt const * const e) {
   static char ledCnt = 0;
   QP::QState status_;
@@ -180,7 +241,7 @@ QP::QState Txr::flashing(Txr * const me, QP::QEvt const * const e) {
   switch (e->sig) {
     case Q_ENTRY_SIG: 
     {
-      ENC_GREEN_LED_ON();
+      ENC_GREEN_LED_TOGGLE();
       me->mFlashTimeout.postEvery(me, FLASH_LED_TOUT);
       ledCnt = 0;
       status_ = Q_HANDLED();
@@ -202,10 +263,11 @@ QP::QState Txr::flashing(Txr * const me, QP::QEvt const * const e) {
     case FLASH_TIMEOUT_SIG: 
     {
       if (++ledCnt > NUM_FLASHES && me->mEncPushes >= 2) {
+        // todo: add ability to go to play back or z mode
         status_ = Q_TRAN(&freeRun);
       }
       else if (ledCnt > NUM_FLASHES) {
-        status_ = Q_TRAN(&calibration); 
+        status_ = Q_TRAN(&uncalibrated); 
       }
       else {
         ENC_GREEN_LED_TOGGLE();
@@ -215,7 +277,7 @@ QP::QState Txr::flashing(Txr * const me, QP::QEvt const * const e) {
     }
     default: 
     {
-      status_ = Q_SUPER(&calibration);
+      status_ = Q_SUPER(&uncalibrated);
       break;
     }
   }
@@ -245,7 +307,7 @@ QP::QState Txr::freeRun(Txr * const me, QP::QEvt const * const e) {
     }
     default: 
     {
-      status_ = Q_SUPER(&QP::QHsm::top);
+      status_ = Q_SUPER(&calibrated);
       break;
     }
   }
