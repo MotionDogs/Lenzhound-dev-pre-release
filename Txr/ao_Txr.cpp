@@ -20,7 +20,7 @@ Q_DEFINE_THIS_FILE
 
 // various timeouts in ticks
 enum TxrTimeouts {                            
-  SEND_ENCODER_TOUT  = BSP_TICKS_PER_SEC / 10,     // how often to send encoder position
+  SEND_ENCODER_TOUT  = BSP_TICKS_PER_SEC / 100,     // how often to send encoder position
   FLASH_LED_TOUT = BSP_TICKS_PER_SEC / 2
 };
 
@@ -37,7 +37,8 @@ private:
   QTimeEvt mFlashTimeout;
   QTimeEvt mSendTimeout;
   rollingaveragernamespace::RollingAverager averager;
-  long mCurPos;
+  float mCurPos;
+  long mPrevPos;  // used to prevent jitter
   long mPrevEncoderCnt;
   long mPos1;
   long mPos2;
@@ -57,6 +58,7 @@ protected:
   static QP::QState flashing(Txr * const me, QP::QEvt const * const e);
   static QP::QState freeRun(Txr * const me, QP::QEvt const * const e);
   void UpdatePosition(Txr *const me);
+  void UpdatePositionCalibration(Txr *const me);  
 };
 
 
@@ -64,11 +66,33 @@ static Txr l_Txr;                   // the single instance of Txr active object 
 QActive * const AO_Txr = &l_Txr;    // the global opaque pointer
 
 
-void Txr::UpdatePosition(Txr *const me)
+void Txr::UpdatePositionCalibration(Txr *const me)
 { 
   long curEncoderCnt = BSP_GetEncoder();
-  me->mCurPos += (curEncoderCnt - me->mPrevEncoderCnt) * me->mCalibrationMultiplier;
+
+  // todo: explain this: since it's 4 counts per detent, let's make it a detent per motor count
+  // this is a test, remove if not neccessary
+  float amountToMove = curEncoderCnt - me->mPrevEncoderCnt;
+  amountToMove /= 4.0;
+  amountToMove *= me->mCalibrationMultiplier;
+  me->mCurPos += amountToMove; //(curEncoderCnt - me->mPrevEncoderCnt) * me->mCalibrationMultiplier;
   me->mPrevEncoderCnt = curEncoderCnt;
+
+  BSP_UpdateRxProxy((long)me->mCurPos);
+}
+
+void Txr::UpdatePosition(Txr *const me)
+{
+  long newPos = BSP_GetPot();
+  // todo: remove magic numbers and explain this
+  newPos = map(newPos,0,1023,me->mPos1,me->mPos2);
+  newPos = me->averager.Roll(newPos);
+  
+  // only update the current position if it's not jittering between two values
+  if (newPos != me->mPrevPos && newPos != me->mCurPos) {
+    me->mPrevPos = me->mCurPos;
+    me->mCurPos = newPos;
+  }
   BSP_UpdateRxProxy(me->mCurPos);
 }
 
@@ -101,7 +125,7 @@ QP::QState Txr::calibration(Txr * const me, QP::QEvt const * const e) {
     }
     case SEND_TIMEOUT_SIG: 
     {
-      me->UpdatePosition(me);
+      me->UpdatePositionCalibration(me);
       status_ = Q_HANDLED(); 
       break;
     }
@@ -215,11 +239,7 @@ QP::QState Txr::freeRun(Txr * const me, QP::QEvt const * const e) {
     }
     case SEND_TIMEOUT_SIG: 
     {
-      long pos = BSP_GetPot();
-      // todo: remove magic numbers
-      pos = map(pos,0,1023,me->mPos1,me->mPos2);
-      pos = me->averager.Roll(pos);
-      BSP_UpdateRxProxy(pos);
+      me->UpdatePosition(me);            
       status_ = Q_HANDLED(); 
       break;
     }

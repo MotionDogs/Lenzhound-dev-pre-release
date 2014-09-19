@@ -267,5 +267,6 @@ void setup(){
  
 void loop() {
   ReadPosition();
+  console.Run();
 }
 
