@@ -1,5 +1,5 @@
-Copyright (C) 2002-2012 Quantum Leaps, LLC. All rights reserved.
-
+LICENSING
+---------
 The QP framework is open source software: you can redistribute it and/or
 modify it under the terms of the GNU General Public License as published
 by the Free Software Foundation, either version 2 of the License, or
@@ -10,6 +10,9 @@ terms of Quantum Leaps commercial licenses, which expressly supersede
 the GNU General Public License and are specifically designed for
 licensees interested in retaining the proprietary status of their code.
 
+
+LIMITATION OF LIABILITY
+-----------------------
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
@@ -19,10 +22,9 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-Contact information
+CONTACT INFORMATION
 -------------------
 Quantum Leaps, LLC
 Web      : http://www.state-machine.com
            http://www.quantum-leaps.com
 e-mail   : info@quantum-leaps.com
-Toll-free: 1-866-450-LEAP (US Eastern Standard Time)

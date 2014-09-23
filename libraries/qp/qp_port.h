@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////
 // Product: QP/C++ port to Arduino
-// Last Updated for QP ver: 4.5.02 (modified to fit in one file)
-// Date of the Last Update: Aug 24, 2012
+// Last Updated for QP ver: 4.5.03 (modified to fit in one file)
+// Date of the Last Update: Oct 02, 2012
 //
 //                    Q u a n t u m     L e a P s
 //                    ---------------------------
@@ -110,7 +110,7 @@
 /// \return version of the QP as a hex constant constant 0xXYZZ, where X is
 /// a 1-digit major version number, Y is a 1-digit minor version number, and
 /// ZZ is a 2-digit release number.
-#define QP_VERSION      0x4502U
+#define QP_VERSION      0x4503U
 
 #ifndef Q_ROM
     /// \brief Macro to specify compiler-specific directive for placing a
@@ -3174,7 +3174,7 @@ QP_END_
     /// \brief Internal QS macro to output an unformatted event signal
     /// data element
     /// \note the size of the pointer depends on the macro #Q_SIGNAL_SIZE.
-    #define QS_SIG_(sig_)    (QP_ QS::u8_(static_cast<uint8_t>(sig_))))
+    #define QS_SIG_(sig_)    (QP_ QS::u8_(static_cast<uint8_t>(sig_)))
 #elif (Q_SIGNAL_SIZE == 2)
     #define QS_SIG_(sig_)    (QP_ QS::u16_(static_cast<uint16_t>(sig_)))
 #elif (Q_SIGNAL_SIZE == 4)

@@ -45,6 +45,7 @@ extern "C" void loop() {
 #ifdef QK_PREEMPTIVE
 void QK_init(void) {
 }
+#endif
 
                  // device driver signal offset at the top of the signal range
 #if (Q_SIGNAL_SIZE == 1)
@@ -57,4 +58,3 @@ void QK_init(void) {
     #error "Q_SIGNAL_SIZE not defined or incorrect"
 #endif
 
-#endif
