@@ -19,12 +19,20 @@ enum PelicanSignals {
     PLAY_MODE_SIG,
     FREE_MODE_SIG,
     Z_MODE_SIG,
+    POSITION_BUTTON_SIG,
     MAX_PUB_SIG,  // the last published signal
 
     SEND_TIMEOUT_SIG,
-    FLASH_TIMEOUT_SIG,
-    ENTER_CALIBRATION_SIG
+    FLASH_RATE_SIG,
+    CALIBRATION_SIG
 };
+
+
+struct PositionButtonEvt : public QP::QEvt
+{
+  char ButtonNum;
+};
+
 
 // active objects ..................................................
 extern QActive * const AO_Txr;

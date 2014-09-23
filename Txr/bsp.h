@@ -20,10 +20,17 @@
 
 #include <avr/io.h>   // AVR I/O
 
+#define MAX_POT_VAL           1024
+#define MIN_POT_VAL           0
+#define NUM_POSITION_BUTTONS  4
+
 // Outputs
 #define GREEN_LED_ON()         (PORTB |= (1 << (5)))
 #define GREEN_LED_OFF()        (PORTB &= ~(1 << (5)))
 #define GREEN_LED_TOGGLE()     (PORTB ^= (1 << (5)))
+#define GREEN2_LED_ON()        (PORTD |= (1 << (2)))
+#define GREEN2_LED_OFF()       (PORTD &= ~(1 << (2)))
+#define GREEN2_LED_TOGGLE()    (PORTD ^= (1 << (2)))
 #define WHITE_LED_ON()         (PORTC |= (1 << (7)))
 #define WHITE_LED_OFF()        (PORTC &= ~(1 << (7)))
 #define WHITE_LED_TOGGLE()     (PORTC ^= (1 << (7)))
@@ -33,6 +40,8 @@
 #define AMBER_LED_ON()         (PORTC |= (1 << (6)))
 #define AMBER_LED_OFF()        (PORTC &= ~(1 << (6)))
 #define AMBER_LED_TOGGLE()     (PORTC ^= (1 << (6)))
+#define RED_LED_ON()           (PORTD |= (1 << (0)))
+#define RED_LED_OFF()          (PORTD &= ~(1 << (0)))
 #define RED_LED_TOGGLE()       (PORTD ^= (1 << (0)))
 #define ENC_GREEN_LED_ON()     (PORTB |= (1 << (6)))
 #define ENC_GREEN_LED_OFF()    (PORTB &= ~(1 << (6)))
@@ -45,11 +54,25 @@
 #define PBUTTON2_ON()     (PINF & 0x20)
 #define PBUTTON3_ON()     (PINF & 0x10)
 #define PBUTTON4_ON()     (PINF & 0x02)
+#define PBUTTONS()        (PINF & 0x72)
 #define CALBUTTON_ON()    (PINF & 0x01)
 #define PLAYSWITCH_ON()   (PIND & 0x10)
 #define FREESWITCH_ON()   (PIND & 0x40)
 #define MODE_SWITCHES()   (PIND & 0x50)  // to see if either have changed
 
+// Modes
+enum {
+  FREE_MODE,
+  PLAYBACK_MODE,
+  Z_MODE
+};
+
+struct Packet {
+  long position;
+  int velocity;
+  int acceleration;
+  char mode;
+};
 
 #define IS_ODD(val) ((val) % 2 == 1)
 
@@ -57,7 +80,7 @@
 #define BSP_TICKS_PER_SEC    1024
 
 void BSP_init(void);
-void BSP_UpdateRxProxy(long pos);
+void BSP_UpdateRxProxy(Packet packet);
 long BSP_GetEncoder();
 int  BSP_GetPot();
 

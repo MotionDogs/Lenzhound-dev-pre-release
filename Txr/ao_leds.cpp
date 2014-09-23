@@ -14,7 +14,7 @@ public:
 public:
     Blinky()
       : QActive(Q_STATE_CAST(&Blinky::initial)),
-        m_timeEvt(FLASH_TIMEOUT_SIG)    {
+        m_timeEvt(FLASH_RATE_SIG)    {
         // empty
     }
 
@@ -38,12 +38,12 @@ QP::QState Blinky::off(Blinky * const me, QP::QEvt const * const e) {
     switch (e->sig) {
         // ${AOs::Blinky::SM::off}
         case Q_ENTRY_SIG: {
-            AMBER_LED_OFF();
+            WHITE_LED_OFF();
             status_ = Q_HANDLED();
             break;
         }
         // ${AOs::Blinky::SM::off::TIMEOUT}
-        case FLASH_TIMEOUT_SIG: {
+        case FLASH_RATE_SIG: {
             status_ = Q_TRAN(&on);
             break;
         }
@@ -60,12 +60,12 @@ QP::QState Blinky::on(Blinky * const me, QP::QEvt const * const e) {
     switch (e->sig) {
         // ${AOs::Blinky::SM::on}
         case Q_ENTRY_SIG: {
-            AMBER_LED_ON();
+            WHITE_LED_ON();
             status_ = Q_HANDLED();
             break;
         }
         // ${AOs::Blinky::SM::on::TIMEOUT}
-        case FLASH_TIMEOUT_SIG: {
+        case FLASH_RATE_SIG: {
             status_ = Q_TRAN(&off);
             break;
         }
