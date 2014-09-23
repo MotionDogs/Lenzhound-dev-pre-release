@@ -24,7 +24,7 @@
 #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
 #include "Arduino.h"
-
+//#include "EncVelManager.h"
 
 
 // Local-scope objects -------------------------------------------------------
@@ -32,7 +32,7 @@ static QEvt const *txrQueueSto[10];
 static QEvt const *blinkyQueueSto[10]; // alocate event queue buffer
 static QSubscrList subscrSto[MAX_PUB_SIG];
 
-static QF_MPOOL_EL(QEvt) smlPoolSto[10]; // storage for the small event pool
+static QF_MPOOL_EL(PositionButtonEvt) smlPoolSto[10]; // storage for the small event pool
 
 //............................................................................
 void setup() {

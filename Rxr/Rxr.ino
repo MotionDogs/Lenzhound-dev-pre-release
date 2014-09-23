@@ -61,6 +61,13 @@ const long kSecondsInMicroseconds = 1000000L;
 const long kIsrFrequency          = 6000L;
 const long kPeriod                = kSecondsInMicroseconds/kIsrFrequency;
 
+struct Packet {
+  long position;
+  int velocity;
+  int acceleration;
+  char mode;
+};
+
 rollingaveragernamespace::RollingAverager time_averager;
 rollingaveragernamespace::RollingAverager delta_averager;
 FIXED isr_count = 0;
@@ -137,23 +144,24 @@ void InitializeLimiterArrays() {
 }
 
 inline void ReadPosition() {
-  long position = observed_position >> kMicrosteps;
+  Packet packet;
+  packet.position = observed_position >> kMicrosteps;
   if (USE_SERIAL_INPUT) {
     if (Serial.available() > 0) {
       char test = Serial.read();
       if (test != 'a'){   
-        position = MAKE_FIXED((long(test) - 96) * 1L); 
+        packet.position = MAKE_FIXED((long(test) - 96) * 1L); 
       }
     } 
   } else {
     if(Mirf.dataReady()){ // Got packet
-      Mirf.getData((byte *) &position);
-      position = MAKE_FIXED(position);
+      Mirf.getData((byte *) &packet);
+      packet.position = MAKE_FIXED(packet.position);
     }    
   }
   estimated_receiver_interval = time_averager.Roll(isr_count);
   previous_target = observed_position;
-  observed_position = position << kMicrosteps;
+  observed_position = packet.position << kMicrosteps;
   current_delta = delta_averager.Roll(Abs(observed_position-previous_target));
   isr_count = 0;
 }
@@ -250,7 +258,7 @@ void setup(){
   Mirf.spi = &MirfHardwareSpi; 
   Mirf.init(); // Setup pins / SPI
   Mirf.setRADDR((byte *)"serv1"); // Configure recieving address
-  Mirf.payload = sizeof(observed_position); // Payload length
+  Mirf.payload = sizeof(Packet); // Payload length
   Mirf.config(); // Power up reciver
  
   InitializeLimiterArrays();
@@ -267,5 +275,6 @@ void setup(){
  
 void loop() {
   ReadPosition();
+  console.Run();
 }
 

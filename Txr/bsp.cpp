@@ -41,8 +41,8 @@ Q_DEFINE_THIS_FILE
 #endif
 
 // Switches and buttons
-#define PLAY_SW    4  // Freerun switch
-#define FREE_SW    12 // Playback switch
+#define ZMODE_SW   4  // ZMODE switch
+#define FREE_SW    12 // Free mode switch
 #define cBUTTON    A5 // Calibrate button
 #define p1BUTTON   A1 // Preset 1
 #define p2BUTTON   A2 // Preset 2
@@ -50,17 +50,19 @@ Q_DEFINE_THIS_FILE
 #define p4BUTTON   A4 // Preset 4
 
 // LEDs
-#define rLED       6  // Red LED
-#define rLED2      9  // Red #2 LED
-#define gLED       10 // Green LED
-#define gLED2      11 // Green #2 LED
-#define enc_rLED   3  // Start record mode, red LED built into rotary encoder
-#define enc_gLED   5  // Green led in record mode, green LED built into rotary encoder
+#define SPEED_LED1       3  // Red LED
+#define SPEED_LED2       5  // Amber #1 LED
+#define SPEED_LED3       6  // Amber #2 LED
+#define SPEED_LED4       9  // Green LED
+#define GREEN_LED        0  // Green #2 LED
+#define ENC_RED_LED      11 // Start record mode, red LED built into rotary encoder
+#define ENC_GREEN_LED    10 // Green led in record mode, green LED built into rotary encoder
 
 
-static Encoder encoder(1,2);
+static Encoder encoder(2,1);
 static int PrevButtonState = 0;
 static int PrevModeState = -1;  // force signal on startup with -1
+static int PrevPositionState = 0; // position buttons
 
 #ifdef Q_SPY
 uint8_t l_TIMER2_COMPA;
@@ -83,41 +85,66 @@ ISR(TIMER4_COMPA_vect) {
       else {
         QF::PUBLISH(Q_NEW(QEvt, ENC_UP_SIG), &l_TIMER2_COMPA);
       }
-       
       PrevButtonState = curButtonState;
     }
     
-    //Check mode switches
+    // Check mode switches
     curButtonState = MODE_SWITCHES();
     if (curButtonState != PrevModeState) {
-      if (curButtonState & 0x40) {
-        QF::PUBLISH(Q_NEW(QEvt, PLAY_MODE_SIG), &l_TIMER2_COMPA);
+      if (curButtonState & 0x10) {
+        QF::PUBLISH(Q_NEW(QEvt, Z_MODE_SIG), &l_TIMER2_COMPA);
       } 
-      else if (curButtonState & 0x10) {
+      else if (curButtonState & 0x40) {
         QF::PUBLISH(Q_NEW(QEvt, FREE_MODE_SIG), &l_TIMER2_COMPA);
       }
       else {
-        QF::PUBLISH(Q_NEW(QEvt, Z_MODE_SIG), &l_TIMER2_COMPA);
+        QF::PUBLISH(Q_NEW(QEvt, PLAY_MODE_SIG), &l_TIMER2_COMPA);
       }
       PrevModeState = curButtonState;
+    }
+    
+    // Check position buttons
+    curButtonState = PBUTTONS();
+    if (curButtonState != PrevPositionState) {
+      // only look at buttons that have changed to the on state (might have pressed two at once)
+      int tempState = curButtonState ^ PrevPositionState;
+      tempState &= curButtonState;
+      PrevPositionState = curButtonState;
+      if (tempState != 0) {
+        PositionButtonEvt *evt = Q_NEW(PositionButtonEvt, POSITION_BUTTON_SIG);
+        if (tempState & 0x40) {
+          evt->ButtonNum = 0;
+        }
+        else if (tempState & 0x20) {
+          evt->ButtonNum = 1;
+        }
+        else if (tempState & 0x10) {
+          evt->ButtonNum = 2;
+        }
+        else if (tempState & 0x02) {
+          evt->ButtonNum = 3;
+        }
+        QF::PUBLISH(evt, &l_TIMER2_COMPA);
+      }      
     }
 }
 
 //............................................................................
 void BSP_init(void) {
-  pinMode(PLAY_SW, INPUT);
+  pinMode(ZMODE_SW, INPUT);
   pinMode(FREE_SW, INPUT); 
   pinMode(cBUTTON, INPUT);
   pinMode(p1BUTTON, INPUT);
-  pinMode(p2BUTTON, OUTPUT);
+  pinMode(p2BUTTON, INPUT);
   pinMode(p3BUTTON, INPUT);
   pinMode(p4BUTTON, INPUT);
-  pinMode(rLED, OUTPUT);  
-  pinMode(rLED2, OUTPUT);
-  pinMode(gLED, OUTPUT);
-  pinMode(gLED2, OUTPUT);
-  pinMode(enc_rLED, OUTPUT);
-  pinMode(enc_gLED, OUTPUT); 
+  pinMode(SPEED_LED1, OUTPUT);  
+  pinMode(SPEED_LED2, OUTPUT);
+  pinMode(SPEED_LED3, OUTPUT);
+  pinMode(SPEED_LED4, OUTPUT);
+  pinMode(GREEN_LED, OUTPUT);
+  pinMode(ENC_RED_LED, OUTPUT);
+  pinMode(ENC_GREEN_LED, OUTPUT);
   
   digitalWrite(A5, HIGH);
     
@@ -126,7 +153,7 @@ void BSP_init(void) {
   Mirf.init();
   Mirf.setRADDR((byte *)"clie1");
   Mirf.setTADDR((byte *)"serv1");
-  Mirf.payload = sizeof(unsigned long);
+  Mirf.payload = sizeof(Packet);
   Mirf.config();
   
   Serial.begin(9600);   // set the highest stanard baud rate of 115200 bps
@@ -156,8 +183,8 @@ void QF::onCleanup(void) {
 //............................................................................
 void QF::onIdle() {
 
-    GREEN_LED_ON();     // toggle the GREEN LED on Arduino on and off, see NOTE1
-    GREEN_LED_OFF();
+    //GREEN_LED_ON();     // toggle the GREEN LED on Arduino on and off, see NOTE1
+    //GREEN_LED_OFF();
 
 #ifdef SAVE_POWER
 
@@ -174,10 +201,10 @@ void QF::onIdle() {
 #endif
 }
 
-void BSP_UpdateRxProxy(long pos)
+void BSP_UpdateRxProxy(Packet packet)
 {  
   if (!Mirf.isSending()) {
-    Mirf.send((byte *)&pos);
+    Mirf.send((byte *)&packet);
   }
 }
 
@@ -195,6 +222,9 @@ int BSP_GetPot()
 void Q_onAssert(char const Q_ROM * const Q_ROM_VAR file, int line) {
     QF_INT_DISABLE();                                // disable all interrupts
     GREEN_LED_ON();                                  // GREEN LED permanently ON
+    RED_LED_ON();
+    AMBER2_LED_ON();
+    AMBER2_LED_ON();
     asm volatile ("jmp 0x0000");    // perform a software reset of the Arduino
 }
 
