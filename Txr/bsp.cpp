@@ -41,8 +41,8 @@ Q_DEFINE_THIS_FILE
 #endif
 
 // Switches and buttons
-#define PLAY_SW    4  // Freerun switch
-#define FREE_SW    12 // Playback switch
+#define ZMODE_SW   4  // ZMODE switch
+#define FREE_SW    12 // Free mode switch
 #define cBUTTON    A5 // Calibrate button
 #define p1BUTTON   A1 // Preset 1
 #define p2BUTTON   A2 // Preset 2
@@ -59,7 +59,7 @@ Q_DEFINE_THIS_FILE
 #define ENC_GREEN_LED    10 // Green led in record mode, green LED built into rotary encoder
 
 
-static Encoder encoder(1,2);
+static Encoder encoder(2,1);
 static int PrevButtonState = 0;
 static int PrevModeState = -1;  // force signal on startup with -1
 static int PrevPositionState = 0; // position buttons
@@ -92,13 +92,13 @@ ISR(TIMER4_COMPA_vect) {
     curButtonState = MODE_SWITCHES();
     if (curButtonState != PrevModeState) {
       if (curButtonState & 0x10) {
-        QF::PUBLISH(Q_NEW(QEvt, PLAY_MODE_SIG), &l_TIMER2_COMPA);
+        QF::PUBLISH(Q_NEW(QEvt, Z_MODE_SIG), &l_TIMER2_COMPA);
       } 
       else if (curButtonState & 0x40) {
         QF::PUBLISH(Q_NEW(QEvt, FREE_MODE_SIG), &l_TIMER2_COMPA);
       }
       else {
-        QF::PUBLISH(Q_NEW(QEvt, Z_MODE_SIG), &l_TIMER2_COMPA);
+        QF::PUBLISH(Q_NEW(QEvt, PLAY_MODE_SIG), &l_TIMER2_COMPA);
       }
       PrevModeState = curButtonState;
     }
@@ -131,7 +131,7 @@ ISR(TIMER4_COMPA_vect) {
 
 //............................................................................
 void BSP_init(void) {
-  pinMode(PLAY_SW, INPUT);
+  pinMode(ZMODE_SW, INPUT);
   pinMode(FREE_SW, INPUT); 
   pinMode(cBUTTON, INPUT);
   pinMode(p1BUTTON, INPUT);

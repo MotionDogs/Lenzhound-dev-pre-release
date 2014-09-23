@@ -56,7 +56,7 @@
 #define PBUTTON4_ON()     (PINF & 0x02)
 #define PBUTTONS()        (PINF & 0x72)
 #define CALBUTTON_ON()    (PINF & 0x01)
-#define PLAYSWITCH_ON()   (PIND & 0x10)
+#define ZSWITCH_ON()      (PIND & 0x10)
 #define FREESWITCH_ON()   (PIND & 0x40)
 #define MODE_SWITCHES()   (PIND & 0x50)  // to see if either have changed
 

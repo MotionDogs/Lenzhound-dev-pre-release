@@ -291,11 +291,11 @@ QP::QState Txr::flashing(Txr * const me, QP::QEvt const * const e) {
     {
       // if they've pressed button 2 times calibration should be complete
       if (me->mEncPushes >= 2) {
-        if (PLAYSWITCH_ON()) {
-          status_ = Q_TRAN(&playBack);
+        if (FREESWITCH_ON()) {
+          status_ = Q_TRAN(&freeRun);
         }  
         else {        
-          status_ = Q_TRAN(&freeRun);
+          status_ = Q_TRAN(&playBack);
         }        
       }
       else {
