@@ -310,6 +310,12 @@ QP::QState Txr::flashing(Txr * const me, QP::QEvt const * const e) {
       status_ = Q_HANDLED();
       break;
     }
+    case ENC_DOWN_SIG: 
+    {
+      // here to swallow the encoder press while flashing; else an exception occurs
+      status_ = Q_HANDLED();
+      break;
+    }
     default: 
     {
       status_ = Q_SUPER(&uncalibrated);

@@ -259,7 +259,7 @@ void Q_onAssert(char const Q_ROM * const Q_ROM_VAR file, int line) {
     QF_INT_DISABLE();                                // disable all interrupts
     GREEN_LED_ON();                                  // GREEN LED permanently ON
     RED_LED_ON();
-    AMBER2_LED_ON();
+    AMBER_LED_ON();
     AMBER2_LED_ON();
     asm volatile ("jmp 0x0000");    // perform a software reset of the Arduino
 }
