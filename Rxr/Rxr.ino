@@ -19,34 +19,6 @@ Console console;
 Settings settings;
 Receiver receiver;
 
-void SetMicrosteps(MicrostepInterval microsteps) {
-  switch (microsteps) {
-    case FULL_STEPS: {
-      MS1_PIN(CLR); 
-      MS2_PIN(CLR);
-      break;
-    }
-    case HALF_STEPS: {
-      MS1_PIN(SET); 
-      MS2_PIN(CLR);
-      break;
-    }
-    case QUARTER_STEPS: {
-      MS1_PIN(CLR); 
-      MS2_PIN(SET);
-      break;
-    }
-    case EIGHTH_STEPS: {
-      MS1_PIN(SET); 
-      MS2_PIN(SET);
-      break;
-    }
-    default: {
-      Serial.println("Bad microstep value.");
-    }
-  }
-}
-
 void TimerISR() {
   motor.Run();
 }
@@ -63,11 +35,11 @@ void setup() {
   SET_MODE(ANT_CTRL1, OUT);
   SET_MODE(ANT_CTRL2, OUT);
  
-  SetMicrosteps(kMicrosteps); 
-  long accel = settings.GetAcceleration() << kMicrosteps;
-  long decel = settings.GetDeceleration() << kMicrosteps;
-  long max_velocity = settings.GetMaxVelocity() << kMicrosteps;
-  motor.Configure(accel, decel, max_velocity);
+  long accel = settings.GetAcceleration();
+  long max_velocity = settings.GetMaxVelocity();
+  char microsteps = settings.GetMicrosteps();
+
+  motor.Configure(accel, max_velocity, microsteps);
 
   Timer1.initialize();
   Timer1.attachInterrupt(TimerISR, kPeriod);

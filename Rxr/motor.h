@@ -1,18 +1,21 @@
 #ifndef rxr_motor_h
 #define rxr_motor_h
+#include "Arduino.h"
+#include "constants.h"
+
+#define EIGHTH_STEPS  3
+#define QUARTER_STEPS 2
+#define HALF_STEPS    1
+#define FULL_STEPS    0
 
 class Motor {
 public:
   long run_count;
   Motor();
-  void Configure(long accel, long decel, long max_velocity);
+  void Configure(long accel, long max_velocity, char microsteps);
   void Run();
-  long observed_position() {
-    return observed_position_;
-  }
-  void set_observed_position(long position) {
-    observed_position_ = position;
-  }
+  long observed_position();
+  void set_observed_position(long position);
   void inspect() {
     Serial.print("direction_: ");
     Serial.println(direction_);
@@ -32,8 +35,11 @@ public:
     Serial.println(decel_denominator_);
     Serial.print("max_velocity_:");
     Serial.println(max_velocity_);
+    Serial.print("microsteps_:");
+    Serial.println(microsteps_);
   }
 private:
+  char microsteps_;
   bool direction_;
   long max_velocity_;
   long accel_;

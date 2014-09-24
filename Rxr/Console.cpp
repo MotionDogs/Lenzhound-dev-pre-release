@@ -15,8 +15,8 @@ enum
   GET_MAX_VEL,
   SET_ACCEL,
   GET_ACCEL,
-  SET_DECEL,
-  GET_DECEL,
+  SET_RESOLUTION,
+  GET_RESOLUTION,
   SET_ANTENNA,
   GET_ANTENNA
 };
@@ -49,8 +49,8 @@ void ShowCommands()
   Serial.println(" 2;                     - Get Max Velocity");
   Serial.println(" 3,<acceleration>;      - Set Acceleration");
   Serial.println(" 4;                     - Get Acceleration");
-  Serial.println(" 5,<deceleration>;      - Set Deceleration");
-  Serial.println(" 6;                     - Get Deceleration");
+  Serial.println(" 5,<resolution (1-4)>;  - Set Resolution");
+  Serial.println(" 6;                     - Get Resolution");
   Serial.println(" 7,<antenna>;           - Set Antenna (0-integrated; 1-remote)");
   Serial.println(" 8;                     - Get Antenna");
 }
@@ -89,18 +89,18 @@ void OnGetAccel()
   Serial.println(settings.GetAcceleration());
 }
 
-void OnSetDecel()
+void OnSetResolution()
 {
   // todo: what happens if there is no arg?
-  long val = cmdMessenger.readInt32Arg();
-  settings.SetDeceleration(val);
+  long val = cmdMessenger.readCharArg();
+  settings.SetMicrosteps(val-1);
   Serial.println(SUCCESS);
 }
 
-void OnGetDecel()
+void OnGetResolution()
 {
-  Serial.print("Decel: ");
-  Serial.println(settings.GetDeceleration());
+  Serial.print("Resolution: ");
+  Serial.println(settings.GetMicrosteps());
 }
 
 void OnSetAntenna()
@@ -133,8 +133,8 @@ void Console::AttachCommandCallbacks()
   cmdMessenger.attach(GET_MAX_VEL, OnGetMaxVel);
   cmdMessenger.attach(SET_ACCEL, OnSetAccel);
   cmdMessenger.attach(GET_ACCEL, OnGetAccel);
-  cmdMessenger.attach(SET_DECEL, OnSetDecel);
-  cmdMessenger.attach(GET_DECEL, OnGetDecel);
+  cmdMessenger.attach(SET_RESOLUTION, OnSetResolution);
+  cmdMessenger.attach(GET_RESOLUTION, OnGetResolution);
   cmdMessenger.attach(GET_ANTENNA, OnGetAntenna);
   cmdMessenger.attach(SET_ANTENNA, OnSetAntenna);
 }
