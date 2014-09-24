@@ -20,7 +20,7 @@ Q_DEFINE_THIS_FILE
 
 // various timeouts in ticks
 enum TxrTimeouts {                            
-  SEND_ENCODER_TOUT  = BSP_TICKS_PER_SEC / 10,     // how often to send encoder position
+  SEND_ENCODER_TOUT  = BSP_TICKS_PER_SEC / 100,     // how often to send encoder position
   FLASH_RATE_TOUT = BSP_TICKS_PER_SEC / 2,      // how quick to flash LED
   FLASH_DURATION_TOUT = BSP_TICKS_PER_SEC *2,            // how long to flash LED for
   ENTER_CALIBRATION_TOUT = BSP_TICKS_PER_SEC * 2    // how long to hold calibration button before reentering calibration
@@ -40,7 +40,7 @@ private:
   QTimeEvt mSendTimeout;
   QTimeEvt mCalibrationTimeout;
   rollingaveragernamespace::RollingAverager averager;
-  float mCurPos;
+  float mCurPos;  // float to save partial moves needed by encoder resolution division
   long mPrevPos;  // used to prevent jitter
   long mPrevEncoderCnt;
   long mCalibrationPos1;
@@ -50,6 +50,7 @@ private:
   Packet mPacket;
   long mSavedPositions[NUM_POSITION_BUTTONS];
   EncVelManager mVelocityManager;
+  unsigned char mPrevPositionButtonPressed;
 
 public:
   Txr() : 
@@ -340,9 +341,23 @@ QP::QState Txr::freeRun(Txr * const me, QP::QEvt const * const e) {
     }
     case POSITION_BUTTON_SIG:
     {
-      int buttonNum = ((PositionButtonEvt*)e)->ButtonNum;
-      Q_REQUIRE(buttonNum < NUM_POSITION_BUTTONS);
-      me->mSavedPositions[buttonNum] = me->mCurPos;
+      me->mPrevPositionButtonPressed = ((PositionButtonEvt*)e)->ButtonNum;
+      Q_REQUIRE(me->mPrevPositionButtonPressed < NUM_POSITION_BUTTONS);
+      me->mSavedPositions[me->mPrevPositionButtonPressed] = me->mCurPos;
+      
+      // flash LED if not already flashing another LED
+      if (me->mFlashTimeout.ctr() == 0) {
+        BSP_TurnOnSpeedLED(me->mPrevPositionButtonPressed);
+        me->mFlashTimeout.postIn(me, FLASH_RATE_TOUT);
+      }
+            
+      status_ = Q_HANDLED();
+      break;
+    }
+    case FLASH_RATE_SIG: 
+    {
+      // turn off flashed LED
+      BSP_TurnOffSpeedLED(me->mPrevPositionButtonPressed);
       status_ = Q_HANDLED();
       break;
     }

@@ -218,6 +218,42 @@ int BSP_GetPot()
   return analogRead(A0);
 }
 
+void BSP_TurnOnSpeedLED(char num)
+{
+  switch (num) {
+    case 0:
+      RED_LED_ON();
+      break;
+    case 1:
+      AMBER_LED_ON();
+      break;
+    case 2:
+      AMBER2_LED_ON();
+      break;
+    case 3:
+      GREEN_LED_ON();
+      break;
+  }
+}
+
+void BSP_TurnOffSpeedLED(char num)
+{
+  switch (num) {
+    case 0:
+      RED_LED_OFF();
+      break;
+    case 1:
+      AMBER_LED_OFF();
+      break;
+    case 2:
+      AMBER2_LED_OFF();
+      break;
+    case 3:
+      GREEN_LED_OFF();
+      break;
+  }
+}
+
 //............................................................................
 void Q_onAssert(char const Q_ROM * const Q_ROM_VAR file, int line) {
     QF_INT_DISABLE();                                // disable all interrupts
