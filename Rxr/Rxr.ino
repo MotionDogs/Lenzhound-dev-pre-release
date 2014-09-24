@@ -12,21 +12,14 @@
 #include "constants.h"
 #include "macros.h"
 #include "motor.h"
-
-#define USE_SERIAL_INPUT false
-
-struct Packet {
-  long position;
-  int velocity;
-  int acceleration;
-  char mode;
-};
+#include "receiver.h"
 
 Motor motor;
 Console console;
 Settings settings;
+Receiver receiver;
 
-inline void SetMicrosteps(MicrostepInterval microsteps) {
+void SetMicrosteps(MicrostepInterval microsteps) {
   switch (microsteps) {
     case FULL_STEPS: {
       MS1_PIN(CLR); 
@@ -54,37 +47,12 @@ inline void SetMicrosteps(MicrostepInterval microsteps) {
   }
 }
 
-inline void ReadPosition() {
-  Packet packet;
-  long observed_position = motor.observed_position();
-  packet.position = observed_position >> kMicrosteps;
-  if (USE_SERIAL_INPUT) {
-    if (Serial.available() > 0) {
-      char test = Serial.read();
-      if (test != 'a'){   
-        packet.position = util::MakeFixed((long(test) - 96) * 40L); 
-      }
-      Serial.println(motor.run_count);
-    } 
-  } else {
-    if(Mirf.dataReady()){ // Got packet
-      Mirf.getData((byte *) &packet);
-      packet.position = util::MakeFixed(packet.position);
-    }    
-  }
-  motor.set_observed_position(packet.position << kMicrosteps);
-}
-
 void TimerISR() {
   motor.Run();
 }
  
 void setup() {
   Serial.begin(kSerialBaud);
-  if (USE_SERIAL_INPUT) {
-    while(!Serial){}
-  }
-  Serial.println("entering setup");
 
   SET_MODE(SLEEP_PIN, OUT);
   SET_MODE(ENABLE_PIN, OUT);
@@ -95,6 +63,7 @@ void setup() {
   SET_MODE(ANT_CTRL1, OUT);
   SET_MODE(ANT_CTRL2, OUT);
  
+  SetMicrosteps(kMicrosteps); 
   long accel = settings.GetAcceleration() << kMicrosteps;
   long decel = settings.GetDeceleration() << kMicrosteps;
   long max_velocity = settings.GetMaxVelocity() << kMicrosteps;
@@ -102,29 +71,16 @@ void setup() {
 
   Timer1.initialize();
   Timer1.attachInterrupt(TimerISR, kPeriod);
- 
-  Mirf.spi = &MirfHardwareSpi; 
-  Mirf.init(); // Setup pins / SPI
-  Mirf.setRADDR((byte *)"serv1"); // Configure recieving address
-  Mirf.payload = sizeof(Packet); // Payload length
-  Mirf.config(); // Power up reciver
- 
-  SetMicrosteps(kMicrosteps); 
+
   SLEEP_PIN(SET);
   ENABLE_PIN(CLR);
   ANT_CTRL1(SET);
   ANT_CTRL1(CLR);
-  Serial.println(accel);
-  Serial.println(decel);
-  Serial.println(max_velocity);
 
   console.Init();
-  Serial.println("exiting setup");
 }
  
 void loop() {
-  ReadPosition();
-  if (!USE_SERIAL_INPUT) {
-    console.Run();
-  }
+  motor.set_observed_position(receiver.Position());
+  console.Run();
 }
