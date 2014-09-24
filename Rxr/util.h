@@ -4,7 +4,7 @@
 
 namespace util {
 inline long Abs(long a) {
-  return a < 0 ? -a : a;
+  return (a < 0) ? -a : a;
 }
 
 inline long Max(long a, long b) {

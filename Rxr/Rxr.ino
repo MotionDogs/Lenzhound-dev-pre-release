@@ -11,6 +11,7 @@
 #include "util.h"
 #include "constants.h"
 #include "macros.h"
+#include "motor.h"
 
 #define USE_SERIAL_INPUT false
 
@@ -21,15 +22,7 @@ struct Packet {
   char mode;
 };
 
-long max_velocity;
-long accel;
-long decel = accel / 2;
-long decel_denominator = util::FixedMultiply(decel, util::MakeFixed(2L));
-long velocity = 0L;
-long calculated_position = 0L;
-bool direction = 1;
-long motor_position = 0L;
-long observed_position = 0L;
+Motor motor;
 Console console;
 Settings settings;
 
@@ -61,20 +54,17 @@ inline void SetMicrosteps(MicrostepInterval microsteps) {
   }
 }
 
-inline bool WeArePastDecelerationThreshold(long steps_to_go) {
-  return steps_to_go <= util::FixedDivide(
-    util::FixedMultiply(velocity,velocity),decel_denominator);
-}
-
 inline void ReadPosition() {
   Packet packet;
+  long observed_position = motor.observed_position();
   packet.position = observed_position >> kMicrosteps;
   if (USE_SERIAL_INPUT) {
     if (Serial.available() > 0) {
       char test = Serial.read();
       if (test != 'a'){   
-        packet.position = util::MakeFixed((long(test) - 96) * 1L); 
+        packet.position = util::MakeFixed((long(test) - 96) * 40L); 
       }
+      Serial.println(motor.run_count);
     } 
   } else {
     if(Mirf.dataReady()){ // Got packet
@@ -82,79 +72,20 @@ inline void ReadPosition() {
       packet.position = util::MakeFixed(packet.position);
     }    
   }
-  observed_position = packet.position << kMicrosteps;
-}
- 
-inline void Pulse() {
-  STEP_PIN(SET); 
-  STEP_PIN(CLR);
-}
- 
-inline void SetDirForward() {
-  DIR_PIN(SET); 
-  direction = 1;
-}
- 
-inline void SetDirBackward() {
-  DIR_PIN(CLR); 
-  direction = 0;
-}
- 
-void Run() {
-  //DetermineSleepState();
-  long steps_to_go = util::Abs(observed_position - calculated_position);
-  if(direction) {
-    if(calculated_position > observed_position || 
-      WeArePastDecelerationThreshold(steps_to_go)) {
-      velocity -= decel;
-    } else if (calculated_position < observed_position) {
-      velocity = util::Min(velocity+accel, max_velocity);
-    }
-    calculated_position += velocity;
-    if(motor_position < calculated_position && 
-      motor_position != observed_position) {
-      motor_position += util::kFixedOne;
-      Pulse();
-    }
-    if(velocity < 0)
-      SetDirBackward();
-  } else {
-    if(calculated_position < observed_position || 
-      WeArePastDecelerationThreshold(steps_to_go)){
-      velocity += decel;
-    } else if (calculated_position > observed_position) {
-      velocity = util::Max(velocity-accel, -max_velocity);
-    }
-    calculated_position += velocity;
-    if(motor_position > calculated_position && 
-      motor_position != observed_position) {
-      motor_position -= util::kFixedOne;
-      Pulse();
-    }
-    if(velocity > 0)
-      SetDirForward();
-  }
-}
- 
-inline void DetermineSleepState(){
-  if (motor_position == observed_position && util::Abs(velocity) <= decel) {
-    SLEEP_PIN(CLR); // this sleeps
-  } else {
-    SLEEP_PIN(SET); // this wakes
-  }
+  motor.set_observed_position(packet.position << kMicrosteps);
 }
 
-void LoadSettings() {
-  max_velocity = settings.GetMaxVelocity() << kMicrosteps;
-  accel = settings.GetAcceleration() << kMicrosteps;
-  decel = settings.GetDeceleration() << kMicrosteps;
+void TimerISR() {
+  motor.Run();
 }
  
 void setup() {
   Serial.begin(kSerialBaud);
+  if (USE_SERIAL_INPUT) {
+    while(!Serial){}
+  }
+  Serial.println("entering setup");
 
-  LoadSettings();
-  
   SET_MODE(SLEEP_PIN, OUT);
   SET_MODE(ENABLE_PIN, OUT);
   SET_MODE(MS1_PIN, OUT);
@@ -164,8 +95,13 @@ void setup() {
   SET_MODE(ANT_CTRL1, OUT);
   SET_MODE(ANT_CTRL2, OUT);
  
+  long accel = settings.GetAcceleration() << kMicrosteps;
+  long decel = settings.GetDeceleration() << kMicrosteps;
+  long max_velocity = settings.GetMaxVelocity() << kMicrosteps;
+  motor.Configure(accel, decel, max_velocity);
+
   Timer1.initialize();
-  Timer1.attachInterrupt(Run, kPeriod);
+  Timer1.attachInterrupt(TimerISR, kPeriod);
  
   Mirf.spi = &MirfHardwareSpi; 
   Mirf.init(); // Setup pins / SPI
@@ -178,11 +114,17 @@ void setup() {
   ENABLE_PIN(CLR);
   ANT_CTRL1(SET);
   ANT_CTRL1(CLR);
+  Serial.println(accel);
+  Serial.println(decel);
+  Serial.println(max_velocity);
 
   console.Init();
+  Serial.println("exiting setup");
 }
  
 void loop() {
   ReadPosition();
-  console.Run();
+  if (!USE_SERIAL_INPUT) {
+    console.Run();
+  }
 }
