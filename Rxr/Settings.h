@@ -4,9 +4,9 @@
 
 // EEPROM locations for parameters
 #define MAX_VEL_LOC      0  // long
-#define ACCEL_LOC        8  // long
-#define MICROSTEPS_LOC   16  // char
-#define ANTENNA_LOC      17 // char
+#define ACCEL_LOC        4  // long
+#define MICROSTEPS_LOC   8  // int
+#define ANTENNA_LOC      10 // char
 
 class Settings
 {
