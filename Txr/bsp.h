@@ -69,8 +69,7 @@ enum {
 
 struct Packet {
   long position;
-  int velocity;
-  int acceleration;
+  char velocity;
   char mode;
 };
 
@@ -83,6 +82,8 @@ void BSP_init(void);
 void BSP_UpdateRxProxy(Packet packet);
 long BSP_GetEncoder();
 int  BSP_GetPot();
+void BSP_TurnOnSpeedLED(char num);
+void BSP_TurnOffSpeedLED(char num);
 
 /////////////////////////////////////////////////////////////////////
 // NOTE: The CPU clock frequency F_CPU is defined externally for each

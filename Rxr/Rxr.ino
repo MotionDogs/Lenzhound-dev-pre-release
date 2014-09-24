@@ -16,8 +16,7 @@
 
 struct Packet {
   long position;
-  int velocity;
-  int acceleration;
+  char velocity;
   char mode;
 };
 
