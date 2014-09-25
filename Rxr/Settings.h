@@ -5,8 +5,8 @@
 // EEPROM locations for parameters
 #define MAX_VEL_LOC      0  // long
 #define ACCEL_LOC        4  // long
-#define DECEL_LOC        8  // long
-#define ANTENNA_LOC      12 // char
+#define MICROSTEPS_LOC   8  // int
+#define ANTENNA_LOC      10 // char
 
 class Settings
 {
@@ -17,8 +17,8 @@ public:
   long GetMaxVelocity();
   void SetAcceleration(long val);
   long GetAcceleration();
-  void SetDeceleration(long val);
-  long GetDeceleration();
+  void SetMicrosteps(char val);
+  char GetMicrosteps();
   void SetAntenna(char val);
   char GetAntenna();
 

@@ -1,6 +1,7 @@
 #ifndef rxr_macros_h
 #define rxr_macros_h
 
+#include "Arduino.h"
 #include "constants.h"
 
 // pin macros

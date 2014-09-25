@@ -30,16 +30,16 @@ long Settings::GetAcceleration()
   return val;
 }
 
-void Settings::SetDeceleration(long val)
+void Settings::SetMicrosteps(char val)
 {
-  eeprom::WriteInt32(DECEL_LOC, val); 
+  eeprom::WriteInt16(MICROSTEPS_LOC, val); 
 }
 
-long Settings::GetDeceleration()
+char Settings::GetMicrosteps()
 {
-  long val;
-  eeprom::ReadInt32(DECEL_LOC, &val);
-  return val;
+  int val;
+  eeprom::ReadInt16(MICROSTEPS_LOC, &val);
+  return (char)val;
 }
 
 void Settings::SetAntenna(char val)
