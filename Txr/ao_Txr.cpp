@@ -174,13 +174,13 @@ QP::QState Txr::uncalibrated(Txr * const me, QP::QEvt const * const e) {
     }
     case PLAY_MODE_SIG: 
     {
-      me->mCalibrationMultiplier = 10;
+      me->mCalibrationMultiplier = 5;
       status_ = Q_HANDLED(); 
       break;
     }
     case Z_MODE_SIG: 
     {
-      me->mCalibrationMultiplier = 5;
+      me->mCalibrationMultiplier = 10;
       status_ = Q_HANDLED(); 
       break;
     }
