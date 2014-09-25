@@ -3,10 +3,9 @@
 
 struct Packet {
   Packet() 
-  : position(0), velocity(0), acceleration(0), mode(0) {}
+  : position(0), velocity(0), mode(0) {}
   long position;
-  int velocity;
-  int acceleration;
+  char velocity;
   char mode;
 };
 
