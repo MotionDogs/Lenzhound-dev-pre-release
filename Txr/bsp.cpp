@@ -40,25 +40,6 @@ Q_DEFINE_THIS_FILE
 #   error BSP_TICKS_PER_SEC too large
 #endif
 
-// Switches and buttons
-#define ZMODE_SW   4  // ZMODE switch
-#define FREE_SW    12 // Free mode switch
-#define cBUTTON    A5 // Calibrate button
-#define p1BUTTON   A1 // Preset 1
-#define p2BUTTON   A2 // Preset 2
-#define p3BUTTON   A3 // Preset 3
-#define p4BUTTON   A4 // Preset 4
-
-// LEDs
-#define SPEED_LED1       3  // Red LED
-#define SPEED_LED2       5  // Amber #1 LED
-#define SPEED_LED3       6  // Amber #2 LED
-#define SPEED_LED4       9  // Green LED
-#define GREEN_LED        0  // Green #2 LED
-#define ENC_RED_LED      11 // Start record mode, red LED built into rotary encoder
-#define ENC_GREEN_LED    10 // Green led in record mode, green LED built into rotary encoder
-
-
 static Encoder encoder(2,1);
 static int PrevButtonState = 0;
 static int PrevModeState = -1;  // force signal on startup with -1
@@ -146,8 +127,12 @@ void BSP_init(void) {
   pinMode(ENC_RED_LED, OUTPUT);
   pinMode(ENC_GREEN_LED, OUTPUT);
   
+  // todo: not sure why this is here, but I tried taking it out once
+  // and the program crashed
   digitalWrite(A5, HIGH);
-    
+  
+  // White LED stays on always
+  WHITE_LED_ON();    
     
   Mirf.spi = &MirfHardwareSpi;
   Mirf.init();
@@ -225,10 +210,10 @@ void BSP_TurnOnSpeedLED(char num)
       RED_LED_ON();
       break;
     case 1:
-      AMBER_LED_ON();
+      analogWrite(SPEED_LED2, 255);
       break;
     case 2:
-      AMBER2_LED_ON();
+      analogWrite(SPEED_LED3, 255);
       break;
     case 3:
       GREEN_LED_ON();
@@ -243,10 +228,10 @@ void BSP_TurnOffSpeedLED(char num)
       RED_LED_OFF();
       break;
     case 1:
-      AMBER_LED_OFF();
+      analogWrite(SPEED_LED2, 0);
       break;
     case 2:
-      AMBER2_LED_OFF();
+      analogWrite(SPEED_LED3, 0);
       break;
     case 3:
       GREEN_LED_OFF();

@@ -38,7 +38,7 @@ QP::QState Blinky::off(Blinky * const me, QP::QEvt const * const e) {
     switch (e->sig) {
         // ${AOs::Blinky::SM::off}
         case Q_ENTRY_SIG: {
-            WHITE_LED_OFF();
+            GREEN2_LED_OFF();
             status_ = Q_HANDLED();
             break;
         }
@@ -60,7 +60,7 @@ QP::QState Blinky::on(Blinky * const me, QP::QEvt const * const e) {
     switch (e->sig) {
         // ${AOs::Blinky::SM::on}
         case Q_ENTRY_SIG: {
-            WHITE_LED_ON();
+            GREEN2_LED_ON();
             status_ = Q_HANDLED();
             break;
         }

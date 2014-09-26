@@ -24,6 +24,24 @@
 #define MIN_POT_VAL           0
 #define NUM_POSITION_BUTTONS  4
 
+// Switches and buttons
+#define ZMODE_SW   4  // ZMODE switch
+#define FREE_SW    12 // Free mode switch
+#define cBUTTON    A5 // Calibrate button
+#define p1BUTTON   A1 // Preset 1
+#define p2BUTTON   A2 // Preset 2
+#define p3BUTTON   A3 // Preset 3
+#define p4BUTTON   A4 // Preset 4
+
+// LEDs
+#define SPEED_LED1       3  // Red LED
+#define SPEED_LED2       5  // Amber #1 LED
+#define SPEED_LED3       6  // Amber #2 LED
+#define SPEED_LED4       9  // Green LED
+#define GREEN_LED        0  // Green #2 LED
+#define ENC_RED_LED      11 // Start record mode, red LED built into rotary encoder
+#define ENC_GREEN_LED    10 // Green led in record mode, green LED built into rotary encoder
+
 // Outputs
 #define GREEN_LED_ON()         (PORTB |= (1 << (5)))
 #define GREEN_LED_OFF()        (PORTB &= ~(1 << (5)))
@@ -43,8 +61,8 @@
 #define RED_LED_ON()           (PORTD |= (1 << (0)))
 #define RED_LED_OFF()          (PORTD &= ~(1 << (0)))
 #define RED_LED_TOGGLE()       (PORTD ^= (1 << (0)))
-#define ENC_GREEN_LED_ON()     (PORTB |= (1 << (6)))
-#define ENC_GREEN_LED_OFF()    (PORTB &= ~(1 << (6)))
+#define ENC_GREEN_LED_ON()     analogWrite(10, 255)
+#define ENC_GREEN_LED_OFF()    analogWrite(10, 0)
 #define ENC_GREEN_LED_TOGGLE() (PORTB ^= (1 << (6)))
 #define ENC_RED_LED_ON()       (PORTB |= (1 << (7)))
 #define ENC_RED_LED_OFF()      (PORTB &= ~(1 << (7)))

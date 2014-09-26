@@ -138,6 +138,8 @@ QP::QState Txr::uncalibrated(Txr * const me, QP::QEvt const * const e) {
   switch (e->sig) {
     case Q_ENTRY_SIG: 
     {
+      ENC_RED_LED_ON();
+      ENC_GREEN_LED_OFF();
       me->mPacket.mode = FREE_MODE;
       status_ = Q_HANDLED();
       break;
@@ -244,7 +246,7 @@ QP::QState Txr::calibrated(Txr * const me, QP::QEvt const * const e) {
     }
     case Z_MODE_SIG:
     {
-      status_ = Q_TRAN(&freeRun);
+      status_ = Q_TRAN(&playBack);
       break;
     }
     case FREE_MODE_SIG:
@@ -268,6 +270,7 @@ QP::QState Txr::flashing(Txr * const me, QP::QEvt const * const e) {
   switch (e->sig) {
     case Q_ENTRY_SIG: 
     {
+      ENC_RED_LED_OFF();
       ENC_GREEN_LED_TOGGLE();
       me->mFlashTimeout.postEvery(me, FLASH_RATE_TOUT);
       me->mCalibrationTimeout.postIn(me, FLASH_DURATION_TOUT);
@@ -278,13 +281,8 @@ QP::QState Txr::flashing(Txr * const me, QP::QEvt const * const e) {
     case Q_EXIT_SIG: 
     {
       me->mFlashTimeout.disarm();
-      // leave light on if calibration complete so user knows
-      if (me->mEncPushes >= 2) {
-        ENC_GREEN_LED_ON();
-      }
-      else {
-        ENC_GREEN_LED_OFF();
-      }
+      ENC_RED_LED_ON();
+      ENC_GREEN_LED_OFF();
       status_ = Q_HANDLED();
       break;
     }
@@ -330,6 +328,8 @@ QP::QState Txr::freeRun(Txr * const me, QP::QEvt const * const e) {
   switch (e->sig) {
     case Q_ENTRY_SIG: 
     {
+      ENC_RED_LED_OFF();
+      analogWrite(ENC_GREEN_LED, 15);
       me->mPacket.mode = FREE_MODE;
       status_ = Q_HANDLED();
       break;
@@ -351,7 +351,7 @@ QP::QState Txr::freeRun(Txr * const me, QP::QEvt const * const e) {
       Q_REQUIRE(me->mPrevPositionButtonPressed < NUM_POSITION_BUTTONS);
       me->mSavedPositions[me->mPrevPositionButtonPressed] = me->mCurPos;
       
-      // flash LED if not already flashing another LED
+      // only flash LED if not already flashing another LED
       if (me->mFlashTimeout.ctr() == 0) {
         BSP_TurnOnSpeedLED(me->mPrevPositionButtonPressed);
         me->mFlashTimeout.postIn(me, FLASH_RATE_TOUT);
@@ -381,6 +381,8 @@ QP::QState Txr::playBack(Txr * const me, QP::QEvt const * const e) {
   switch (e->sig) {
     case Q_ENTRY_SIG: 
     {
+      ENC_GREEN_LED_ON();
+      ENC_RED_LED_ON();
       me->mPacket.mode = PLAYBACK_MODE;
       me->mPacket.position = me->mCurPos;
       me->mVelocityManager.Init();

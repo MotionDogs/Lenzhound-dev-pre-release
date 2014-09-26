@@ -8,6 +8,7 @@ class EncVelManager
 protected:
   long mPrevEncPos;
   int mVelocityPercent;
+  int mPrevVelocityPercent;
 
 public:
   void Init();
