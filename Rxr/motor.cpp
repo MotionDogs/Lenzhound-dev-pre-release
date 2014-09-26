@@ -21,7 +21,6 @@ void Motor::set_observed_position(long position) {
 
 void Motor::Configure(
   long accel, long max_velocity, char microsteps) {
-  microsteps = 3;
   microsteps_ = microsteps;
   accel_ = accel << microsteps_;
   max_velocity_ = max_velocity << microsteps_;

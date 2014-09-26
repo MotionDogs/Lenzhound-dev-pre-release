@@ -17,7 +17,7 @@ public:
   long GetMaxVelocity();
   void SetAcceleration(long val);
   long GetAcceleration();
-  void SetMicrosteps(char val);
+  void SetMicrosteps(int val);
   char GetMicrosteps();
   void SetAntenna(char val);
   char GetAntenna();

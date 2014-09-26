@@ -49,7 +49,7 @@ void ShowCommands()
   Serial.println(" 2;                     - Get Max Velocity");
   Serial.println(" 3,<acceleration>;      - Set Acceleration");
   Serial.println(" 4;                     - Get Acceleration");
-  Serial.println(" 5,<resolution (1-4)>;  - Set Resolution");
+  Serial.println(" 5,<resolution (0-3)>;  - Set Resolution");
   Serial.println(" 6;                     - Get Resolution");
   Serial.println(" 7,<antenna>;           - Set Antenna (0-integrated; 1-remote)");
   Serial.println(" 8;                     - Get Antenna");
@@ -92,8 +92,8 @@ void OnGetAccel()
 void OnSetResolution()
 {
   // todo: what happens if there is no arg?
-  long val = cmdMessenger.readCharArg();
-  settings.SetMicrosteps(val-1);
+  int val = cmdMessenger.readInt16Arg();
+  settings.SetMicrosteps(val);
   Serial.println(SUCCESS);
 }
 

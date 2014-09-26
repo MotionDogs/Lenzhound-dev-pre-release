@@ -30,7 +30,7 @@ long Settings::GetAcceleration()
   return val;
 }
 
-void Settings::SetMicrosteps(char val)
+void Settings::SetMicrosteps(int val)
 {
   eeprom::WriteInt16(MICROSTEPS_LOC, val); 
 }
