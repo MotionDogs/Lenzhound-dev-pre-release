@@ -1,6 +1,7 @@
 #ifndef Console_h
 #define Console_h
 
+#include "Settings.h"
 
 class Console
 {
