@@ -1,6 +1,6 @@
-
 #include "Settings.h"
 #include "eepromImpl.h"
+#include "events.h"
 
 Settings::Settings() {
   // if values are saved might to load them up here  
@@ -9,6 +9,7 @@ Settings::Settings() {
 void Settings::SetMaxVelocity(long val)
 {
   eeprom::WriteInt32(MAX_VEL_LOC, val); 
+  events::set_dirty(true);
 }
 
 long Settings::GetMaxVelocity()
@@ -21,6 +22,7 @@ long Settings::GetMaxVelocity()
 void Settings::SetAcceleration(long val)
 {
   eeprom::WriteInt32(ACCEL_LOC, val); 
+  events::set_dirty(true);
 }
 
 long Settings::GetAcceleration()
@@ -33,6 +35,7 @@ long Settings::GetAcceleration()
 void Settings::SetMicrosteps(int val)
 {
   eeprom::WriteInt16(MICROSTEPS_LOC, val); 
+  events::set_dirty(true);
 }
 
 char Settings::GetMicrosteps()
@@ -45,6 +48,7 @@ char Settings::GetMicrosteps()
 void Settings::SetAntenna(char val)
 {
   eeprom::WriteChar(ANTENNA_LOC, val); 
+  events::set_dirty(true);
 }
 
 char Settings::GetAntenna()

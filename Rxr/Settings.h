@@ -16,7 +16,7 @@ class Settings
 {
 public:
   Settings();
-  
+  //todo: this needs to be brought out into an event loop
   void SetMaxVelocity(long val);
   long GetMaxVelocity();
   void SetAcceleration(long val);

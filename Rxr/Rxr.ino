@@ -13,6 +13,7 @@
 #include "macros.h"
 #include "motor.h"
 #include "receiver.h"
+#include "events.h"
 
 Motor motor;
 Console console;
@@ -21,6 +22,13 @@ Receiver receiver;
 
 void TimerISR() {
   motor.Run();
+}
+
+void DirtyCheckSettings() {
+  long accel = settings.GetAcceleration();
+  long max_velocity = settings.GetMaxVelocity();
+  char microsteps = settings.GetMicrosteps();
+  motor.Configure(accel, max_velocity, microsteps);
 }
  
 void setup() {
@@ -34,15 +42,6 @@ void setup() {
   SET_MODE(DIR_PIN, OUT);
   SET_MODE(ANT_CTRL1, OUT);
   SET_MODE(ANT_CTRL2, OUT);
- 
-  long accel = settings.GetAcceleration();
-  long max_velocity = settings.GetMaxVelocity();
-  char microsteps = settings.GetMicrosteps();
-
-  motor.Configure(accel, max_velocity, microsteps);
-
-  Timer1.initialize();
-  Timer1.attachInterrupt(TimerISR, kPeriod);
 
   SLEEP_PIN(SET);
   ENABLE_PIN(CLR);
@@ -50,9 +49,17 @@ void setup() {
   ANT_CTRL1(CLR);
 
   console.Init();
+  DirtyCheckSettings();
+
+  Timer1.initialize();
+  Timer1.attachInterrupt(TimerISR, kPeriod);
 }
  
 void loop() {
   motor.set_observed_position(receiver.Position());
   console.Run();
+  if (events::dirty()) {
+    events::set_dirty(false);
+    DirtyCheckSettings();
+  }
 }
