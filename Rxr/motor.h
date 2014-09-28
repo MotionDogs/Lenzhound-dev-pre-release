@@ -16,7 +16,6 @@ public:
   void Run();
   long observed_position();
   void set_observed_position(long position);
-  void set_max_velocity(long observed_velocity);
   void inspect() {
     Serial.print("direction_: ");
     Serial.println(direction_);
