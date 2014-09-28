@@ -53,3 +53,39 @@ char Settings::GetAntenna()
   eeprom::ReadChar(ANTENNA_LOC, &val);
   return val;
 }
+
+void Settings::SetChannel(char val)
+{
+  eeprom::WriteChar(CHANNEL_LOC, val); 
+}
+
+char Settings::GetChannel()
+{
+  char val;
+  eeprom::ReadChar(CHANNEL_LOC, &val);
+  return val;
+}
+
+void Settings::SetPALevel(char val)
+{
+  eeprom::WriteChar(PA_LEVEL_LOC, val); 
+}
+
+char Settings::GetPALevel()
+{
+  char val;
+  eeprom::ReadChar(PA_LEVEL_LOC, &val);
+  return val;
+}
+
+void Settings::SetDataRate(char val)
+{
+  eeprom::WriteChar(DATA_RATE_LOC, val); 
+}
+
+char Settings::GetDataRate()
+{
+  char val;
+  eeprom::ReadChar(DATA_RATE_LOC, &val);
+  return val;
+}

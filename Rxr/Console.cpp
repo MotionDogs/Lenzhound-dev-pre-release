@@ -18,7 +18,13 @@ enum
   SET_RESOLUTION,
   GET_RESOLUTION,
   SET_ANTENNA,
-  GET_ANTENNA
+  GET_ANTENNA,
+  SET_CHANNEL,
+  GET_CHANNEL,
+  SET_PALEVEL,
+  GET_PALEVEL,
+  SET_DATARATE,
+  GET_DATARATE
 };
 
 Console::Console()
@@ -53,6 +59,12 @@ void ShowCommands()
   Serial.println(" 6;                     - Get Resolution");
   Serial.println(" 7,<antenna>;           - Set Antenna (0-integrated; 1-remote)");
   Serial.println(" 8;                     - Get Antenna");
+  Serial.println(" 9,<channel>;           - Set Channel Num (0-84)");
+  Serial.println(" 10;                    - Get Channel");
+  Serial.println(" 11,<PA level>;         - Set Power Amp Level (0-3)");
+  Serial.println(" 12;                    - Get Power Amp Level");
+  Serial.println(" 13,<data rate>;        - Set Data Rate (0-2)");
+  Serial.println(" 14;                    - Get Data Rate");
 }
 
 void OnUnknownCommand()
@@ -117,6 +129,48 @@ void OnGetAntenna()
   Serial.println(settings.GetAntenna());
 }
 
+void OnSetChannel()
+{
+  // todo: what happens if there is no arg?
+  char val = cmdMessenger.readCharArg();
+  settings.SetChannel(val);
+  Serial.println(SUCCESS);
+}
+
+void OnGetChannel()
+{
+  Serial.print("Channel: ");
+  Serial.println(settings.GetChannel());
+}
+
+void OnSetPALevel()
+{
+  // todo: what happens if there is no arg?
+  char val = cmdMessenger.readCharArg();
+  settings.SetPALevel(val);
+  Serial.println(SUCCESS);
+}
+
+void OnGetPALevel()
+{
+  Serial.print("PA Level: ");
+  Serial.println(settings.GetPALevel());
+}
+
+void OnSetDataRate()
+{
+  // todo: what happens if there is no arg?
+  char val = cmdMessenger.readCharArg();
+  settings.SetDataRate(val);
+  Serial.println(SUCCESS);
+}
+
+void OnGetDataRate()
+{
+  Serial.print("Data Rate: ");
+  Serial.println(settings.GetDataRate());
+}
+
 // Callback function that shows a list of commands
 void OnCommandList()
 {
@@ -137,6 +191,12 @@ void Console::AttachCommandCallbacks()
   cmdMessenger.attach(GET_RESOLUTION, OnGetResolution);
   cmdMessenger.attach(GET_ANTENNA, OnGetAntenna);
   cmdMessenger.attach(SET_ANTENNA, OnSetAntenna);
+  cmdMessenger.attach(SET_CHANNEL, OnSetChannel);
+  cmdMessenger.attach(GET_CHANNEL, OnGetChannel);
+  cmdMessenger.attach(SET_PALEVEL, OnSetPALevel);
+  cmdMessenger.attach(GET_PALEVEL, OnGetPALevel);
+  cmdMessenger.attach(SET_DATARATE, OnSetDataRate);
+  cmdMessenger.attach(GET_DATARATE, OnGetDataRate);
 }
 
 

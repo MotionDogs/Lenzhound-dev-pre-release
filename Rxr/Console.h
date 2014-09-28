@@ -18,7 +18,9 @@ private:
 };
 
 // have to make these external to class because can't attach member functions
-// to handlers - todo: look into a better way
+// to handlers
+// todo: look into a better way
+// todo: add range checks to all these
 void OnSetMaxVel();
 void OnGetMaxVel();
 void OnUnknownCommand();
@@ -30,5 +32,11 @@ void OnSetDecel();
 void OnGetDecel();
 void OnSetAntenna();
 void OnGetAntenna();
+void OnSetChannel();
+void OnGetChannel();
+void OnSetPALevel();
+void OnGetPALevel();
+void OnSetDataRate();
+void OnGetDataRate();
 
 #endif
