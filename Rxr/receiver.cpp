@@ -6,6 +6,7 @@
 #include "receiver.h"
 #include "util.h"
 
+
 Receiver::Receiver() {
   Mirf.spi = &MirfHardwareSpi; 
   Mirf.init(); // Setup pins / SPI
@@ -14,10 +15,11 @@ Receiver::Receiver() {
   Mirf.config(); // Power up reciver
 }
 
-long Receiver::Position() {
+long Receiver::Position(Motor motor) {
   if(Mirf.dataReady()){ // Got packet
     Mirf.getData((byte *) &packet_);
     packet_.position = util::MakeFixed(packet_.position);
+    motor.set_max_velocity(packet_.velocity);
   }
   return packet_.position;
 }
