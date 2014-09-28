@@ -19,17 +19,28 @@ void Motor::set_observed_position(long position) {
   observed_position_ = position << microsteps_;
 }
 
-void Motor::set_max_velocity (long observed_velocity){
-  max_velocity_ = util::MakeFixed(observed_velocity);
-}
-
 void Motor::Configure(
   long accel, long max_velocity, char microsteps) {
+  char microstep_difference = microsteps - microsteps_;
   microsteps_ = microsteps;
   accel_ = accel << microsteps_;
   max_velocity_ = max_velocity << microsteps_;
   decel_ = accel_;
   decel_denominator_ = util::FixedMultiply(decel_, util::MakeFixed(2L));
+
+  // negative shifting is undefined behavior in c++
+  if (microstep_difference >= 0) {
+    observed_position_ <<= microstep_difference;
+    calculated_position_ <<= microstep_difference;
+    motor_position_ <<= microstep_difference;
+    velocity_ <<= microstep_difference;
+  } else {
+    observed_position_ >>= -microstep_difference;
+    calculated_position_ >>= -microstep_difference;
+    motor_position_ >>= -microstep_difference;
+    velocity_ >>= -microstep_difference;
+  }
+
   switch (microsteps_) {
     case FULL_STEPS: {
       MS1_PIN(CLR);

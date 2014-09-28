@@ -1,4 +1,3 @@
-#include "Motor.h"
 #ifndef rxr_receiver_h
 #define rxr_receiver_h
 
@@ -13,7 +12,7 @@ struct Packet {
 class Receiver {
 public:
   Receiver();
-  long Position(Motor motor);
+  long Position();
 private:
   Packet packet_;
 };
