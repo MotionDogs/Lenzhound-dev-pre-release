@@ -12,7 +12,10 @@ struct Packet {
 class Receiver {
 public:
   Receiver();
+  void receive_data();
   long Position();
+  char Velocity();
+  char Mode();
 private:
   Packet packet_;
 };

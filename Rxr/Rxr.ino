@@ -56,7 +56,9 @@ void setup() {
 }
  
 void loop() {
+  receiver.receive_data();
   motor.set_observed_position(receiver.Position());
+  motor.set_max_velocity(receiver.Velocity());
   console.Run();
   if (events::dirty()) {
     events::set_dirty(false);
