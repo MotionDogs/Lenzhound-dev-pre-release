@@ -4,8 +4,7 @@
 #include <MirfSpiDriver.h>
 #include <nRF24L01.h>
 #include "Settings.h"
-#include "receiver.h"
-#include "util.h"
+#include "Radio.h"
 
 #define RATE_MASK     0b11111000
 #define RATE_250KB    0b00100000
@@ -22,21 +21,21 @@
 const char rates[] =  { 0b00100000, 0b00000000, 0b00001000 };
 const char levels[] = { 0b00000000, 0b00000010, 0b00000100, 0b00000011 };
 
-Receiver::Receiver() {
+Radio::Radio(int packetSize) {
   Mirf.spi = &MirfHardwareSpi; 
   Mirf.init(); // Setup pins / SPI
-  Mirf.setRADDR((byte *)"serv1"); // Configure recieving address
-  Mirf.payload = sizeof(Packet); // Payload length
+  Mirf.setTADDR((byte *)"serv1");
+  Mirf.payload = packetSize; // Payload length
   LoadSettings();
   Mirf.config(); // Power up reciver
 }
 
-void Receiver::LoadSettings()
+void Radio::LoadSettings()
 {
 	// Get and apply settings if within allowable ranges
   Settings settings;
   byte reg[] =  {RF_DEFAULT,0}; 
-  unsigned char setting = settings.GetPALevel();
+  int setting = settings.GetPALevel();
   if (setting >= 0 && setting <= 3) {
     reg[0] &= PALEVEL_MASK;
     reg[0] |= levels[setting];
@@ -53,17 +52,16 @@ void Receiver::LoadSettings()
   Mirf.writeRegister(RF_SETUP, (byte *)reg, 1);
 }
 
-void Receiver::ReloadSettings()
+void Radio::ReloadSettings()
 {
   Mirf.powerDown();  // not sure if this is necessary
   LoadSettings();
   Mirf.config();
 }
 
-long Receiver::Position() {
-  if(Mirf.dataReady()){ // Got packet
-    Mirf.getData((byte *) &packet_);
-    packet_.position = util::MakeFixed(packet_.position);
+void Radio::SendPacket(byte *message) {
+  if (!Mirf.isSending()) {
+    Serial.println(long(message[0]),HEX);
+    Mirf.send(message);
   }
-  return packet_.position;
 }

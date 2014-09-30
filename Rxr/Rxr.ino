@@ -29,6 +29,7 @@ void DirtyCheckSettings() {
   long max_velocity = settings.GetMaxVelocity();
   char microsteps = settings.GetMicrosteps();
   motor.Configure(accel, max_velocity, microsteps);
+  receiver.ReloadSettings();
 }
  
 void setup() {
