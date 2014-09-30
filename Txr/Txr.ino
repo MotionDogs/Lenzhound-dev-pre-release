@@ -1,6 +1,6 @@
 //****************************************************************************
-// Version 0.1.5?  // not sure where we are on version numbers
-// 9/24/2014
+// Version 0.1.8
+// 9/29/2014
 //
 // This program is open source software: you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as published
@@ -11,7 +11,7 @@
 // or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
 // for more details.
 //****************************************************************************
-//${.::pelican.ino} ..........................................................
+
 #include "qp_port.h"
 #include "Txr.h"
 #include "bsp.h"

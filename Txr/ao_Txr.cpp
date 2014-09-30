@@ -165,11 +165,6 @@ QP::QState Txr::uncalibrated(Txr * const me, QP::QEvt const * const e) {
       // to map higher calibrated position with higher motor position
       else {
         me->mCalibrationPos2 = me->mCurPos;
-        if (me->mCalibrationPos1 > me->mCalibrationPos2) {
-          long pos = me->mCalibrationPos1;
-          me->mCalibrationPos1 = me->mCalibrationPos2;
-          me->mCalibrationPos2 = pos;
-        }
       }
       status_ = Q_TRAN(&flashing);
       break;
