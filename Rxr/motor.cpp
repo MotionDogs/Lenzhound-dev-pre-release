@@ -13,12 +13,8 @@ sleeping_(false),
 velocity_(0) {
 }
 
-long Motor::observed_position(){
-  return observed_position_;
-}
-
 void Motor::set_observed_position(long position) {
-  long new_position = position << microsteps_;
+  long new_position = position >> (3 - microsteps_);
   if (new_position != observed_position_) {
     WakeUp();
     run_count_ = 0;

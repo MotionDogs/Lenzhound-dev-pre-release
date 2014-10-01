@@ -13,7 +13,6 @@ public:
   Motor();
   void Configure(long accel, long max_velocity, char microsteps);
   void Run();
-  long observed_position();
   void set_observed_position(long position);
   void inspect() {
     Serial.print("direction_: ");
