@@ -10,19 +10,26 @@ direction_(1),
 calculated_position_(0),
 observed_position_(0),
 motor_position_(0),
+run_count_(0),
+sleeping_(false),
 velocity_(0) {
 }
 
-long Motor::observed_position(){
-  return observed_position_;
-}
-
 void Motor::set_observed_position(long position) {
+<<<<<<< HEAD
   observed_position_ = position << microsteps_;
 }
 
 void Motor::set_max_velocity(int velocity) {
   current_velocity_cap = max_velocity_ * velocity * PERCENT_CONVERSION_FACTOR;
+=======
+  long new_position = position >> (3 - microsteps_);
+  if (new_position != observed_position_) {
+    WakeUp();
+    run_count_ = 0;
+  }
+  observed_position_ = new_position;
+>>>>>>> origin/master
 }
 
 void Motor::Configure(
@@ -91,14 +98,40 @@ long Motor::GetDecelerationThreshold() {
     util::FixedMultiply(velocity_,velocity_),decel_denominator_);
 }
 
+void Motor::Sleep() {
+  sleeping_ = true;
+  run_count_ = 0;
+  SLEEP_PIN(CLR);
+}
+
+void Motor::WakeUp() {
+  sleeping_ = false;
+  SLEEP_PIN(SET);
+}
+
+bool Motor::TrySleep() {
+  if (sleeping_) {
+    return true;
+  }
+  if (run_count_ > kSleepThreshold) {
+    Sleep();
+    return true;
+  }
+  run_count_++;
+  return false;
+}
+
 void Motor::Run() {
+  if (TrySleep()) {
+    return;
+  }
   long steps_to_go = util::Abs(observed_position_ - calculated_position_);
   if(direction_) {
     if((calculated_position_ > observed_position_) ||
       (steps_to_go <= GetDecelerationThreshold())) {
       velocity_ -= decel_;
     } else if (calculated_position_ < observed_position_) {
-      velocity_ = util::Min(velocity_+accel_, current_velocity_cap);
+      velocity_ = util::Min(velocity_+accel_, max_velocity_);
     }
     calculated_position_ += velocity_;
     if((motor_position_ < calculated_position_) &&
@@ -113,7 +146,7 @@ void Motor::Run() {
       (steps_to_go <= GetDecelerationThreshold())){
       velocity_ += decel_;
     } else if (calculated_position_ > observed_position_) {
-      velocity_ = util::Max(velocity_-accel_, -current_velocity_cap);
+      velocity_ = util::Max(velocity_-accel_, -max_velocity_);
     }
     calculated_position_ += velocity_;
     if(motor_position_ > calculated_position_ &&

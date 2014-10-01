@@ -4,14 +4,8 @@
 #include <MirfSpiDriver.h>
 #include <nRF24L01.h>
 #include "Settings.h"
-#include "macros.h"
-#include "receiver.h"
-#include "util.h"
+#include "radio.h"
 
-<<<<<<< HEAD
-#define PLAYBACK_MODE 1
-#define MAX_VELOCITY 100
-=======
 #define RATE_MASK     0b11111000
 #define RATE_250KB    0b00100000
 #define RATE_1MB      0b00000000
@@ -26,65 +20,47 @@
 
 const char rates[] =  { 0b00100000, 0b00000000, 0b00001000 };
 const char levels[] = { 0b00000000, 0b00000010, 0b00000100, 0b00000011 };
->>>>>>> origin/master
 
-Receiver::Receiver() {
-  Mirf.spi = &MirfHardwareSpi;
+Radio::Radio(int packetSize) {
+  Mirf.spi = &MirfHardwareSpi; 
   Mirf.init(); // Setup pins / SPI
-  Mirf.setRADDR((byte *)"serv1"); // Configure recieving address
-  Mirf.payload = sizeof(Packet); // Payload length
+  Mirf.setTADDR((byte *)"serv1");
+  Mirf.payload = packetSize; // Payload length
   LoadSettings();
   Mirf.config(); // Power up reciver
 }
 
-void Receiver::LoadSettings()
+void Radio::LoadSettings()
 {
 	// Get and apply settings if within allowable ranges
   Settings settings;
   byte reg[] =  {RF_DEFAULT,0}; 
-  unsigned char setting = settings.GetPALevel();
+  int setting = settings.GetPALevel();
   if (setting >= 0 && setting <= 3) {
     reg[0] &= PALEVEL_MASK;
     reg[0] |= levels[setting];
-  }
-  setting = settings.GetDataRate();
+  } 
+  setting = settings.GetDataRate(); 
   if (setting >= 0 && setting <= 2) {
     reg[0] &= RATE_MASK;
     reg[0] |= rates[setting];
-  }
+  }    
   setting = settings.GetChannel();
   if (setting >= 0 && setting <= 84) {
     Mirf.channel = setting;
-  }
-  setting = settings.GetAntenna();
-  if (setting == 0) {
-    ANT_CTRL2(CLR);
-    ANT_CTRL1(SET);
-  } else {
-    ANT_CTRL1(CLR);
-    ANT_CTRL2(SET);
-  }
+  }  
   Mirf.writeRegister(RF_SETUP, (byte *)reg, 1);
 }
 
-<<<<<<< HEAD
-int Receiver::Velocity() {
-  if(packet_.mode==PLAYBACK_MODE)
-    return packet_.velocity;
-  return MAX_VELOCITY;
-=======
-void Receiver::ReloadSettings()
+void Radio::ReloadSettings()
 {
   Mirf.powerDown();  // not sure if this is necessary
   LoadSettings();
   Mirf.config();
->>>>>>> origin/master
 }
 
-long Receiver::Position() {
-  if(Mirf.dataReady()){ // Got packet
-    Mirf.getData((byte *) &packet_);
-    packet_.position = util::MakeFixed(packet_.position);
+void Radio::SendPacket(byte *message) {
+  if (!Mirf.isSending()) {
+    Mirf.send(message);
   }
-  return packet_.position;
 }

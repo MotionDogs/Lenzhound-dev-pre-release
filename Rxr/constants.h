@@ -9,4 +9,7 @@ const long kSecondsInMicroseconds = 1000000L;
 const long kIsrFrequency          = 6000L;
 const long kPeriod                = kSecondsInMicroseconds/kIsrFrequency;
 
+// Motor constants
+const long kSleepThreshold        = kIsrFrequency * 5; // five seconds
+
 #endif // rxr_constants_h

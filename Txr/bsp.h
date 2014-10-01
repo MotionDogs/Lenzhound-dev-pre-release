@@ -86,12 +86,12 @@ enum {
 };
 
 struct Packet {
+  Packet() 
+  : position(0), velocity(0), mode(0) {}
   long position;
   char velocity;
   char mode;
 };
-
-#define IS_ODD(val) ((val) % 2 == 1)
 
 // Sys timer tick per seconds
 #define BSP_TICKS_PER_SEC    1024
