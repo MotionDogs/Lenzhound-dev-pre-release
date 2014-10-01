@@ -1,3 +1,17 @@
+//****************************************************************************
+// Version 0.1.8
+// 9/29/2014
+//
+// This program is open source software: you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as published
+// by the Free Software Foundation.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+// or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+// for more details.
+//****************************************************************************
+
 #include <SPI.h>
 #include <Mirf.h>
 #include <MirfHardwareSpiDriver.h>
@@ -29,6 +43,7 @@ void DirtyCheckSettings() {
   long max_velocity = settings.GetMaxVelocity();
   char microsteps = settings.GetMicrosteps();
   motor.Configure(accel, max_velocity, microsteps);
+  receiver.ReloadSettings();
 }
  
 void setup() {

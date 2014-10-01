@@ -12,9 +12,11 @@ struct Packet {
 class Receiver {
 public:
   Receiver();
+  void ReloadSettings();
   long Position();
 private:
   Packet packet_;
+  void LoadSettings();
 };
 
 #endif //rxr_receiver_h

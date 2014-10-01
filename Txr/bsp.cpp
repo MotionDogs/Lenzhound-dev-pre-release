@@ -26,6 +26,8 @@
 #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
 #include "RollingAverager.h"
+#include "radio.h"
+#include "Console.h"
 
 
 Q_DEFINE_THIS_FILE
@@ -40,6 +42,8 @@ Q_DEFINE_THIS_FILE
 #   error BSP_TICKS_PER_SEC too large
 #endif
 
+static Console console;
+static Radio radio(sizeof(Packet));
 static Encoder encoder(2,1);
 static int PrevButtonState = 0;
 static int PrevModeState = -1;  // force signal on startup with -1
@@ -108,6 +112,8 @@ ISR(TIMER4_COMPA_vect) {
         QF::PUBLISH(evt, &l_TIMER2_COMPA);
       }      
     }
+    
+    console.Run();
 }
 
 //............................................................................
@@ -133,15 +139,9 @@ void BSP_init(void) {
   
   // White LED stays on always
   WHITE_LED_ON();    
-    
-  Mirf.spi = &MirfHardwareSpi;
-  Mirf.init();
-  Mirf.setRADDR((byte *)"clie1");
-  Mirf.setTADDR((byte *)"serv1");
-  Mirf.payload = sizeof(Packet);
-  Mirf.config();
   
   Serial.begin(9600);   // set the highest stanard baud rate of 115200 bps
+  console.Init();
 
   //if (QS_INIT((void *)0) == 0) {       // initialize the QS software tracing
   //    Q_ERROR();
@@ -188,9 +188,7 @@ void QF::onIdle() {
 
 void BSP_UpdateRxProxy(Packet packet)
 {  
-  if (!Mirf.isSending()) {
-    Mirf.send((byte *)&packet);
-  }
+  radio.SendPacket((byte *)&packet);
 }
 
 long BSP_GetEncoder()

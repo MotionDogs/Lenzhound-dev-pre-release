@@ -10,11 +10,9 @@
 
 class Motor {
 public:
-  long run_count;
   Motor();
   void Configure(long accel, long max_velocity, char microsteps);
   void Run();
-  long observed_position();
   void set_observed_position(long position);
   void inspect() {
     Serial.print("direction_: ");
@@ -49,11 +47,16 @@ private:
   long calculated_position_;
   long motor_position_;
   long observed_position_;
+  long run_count_;
+  long sleeping_;
 
   void Pulse();
   void SetDirForward();
   void SetDirBackward();
   long GetDecelerationThreshold();
+  bool TrySleep();
+  void Sleep();
+  void WakeUp();
 };
 
 #endif //rxr_motor_h

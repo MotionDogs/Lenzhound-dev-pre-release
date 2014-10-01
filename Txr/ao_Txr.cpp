@@ -165,30 +165,25 @@ QP::QState Txr::uncalibrated(Txr * const me, QP::QEvt const * const e) {
       // to map higher calibrated position with higher motor position
       else {
         me->mCalibrationPos2 = me->mCurPos;
-        if (me->mCalibrationPos1 > me->mCalibrationPos2) {
-          long pos = me->mCalibrationPos1;
-          me->mCalibrationPos1 = me->mCalibrationPos2;
-          me->mCalibrationPos2 = pos;
-        }
       }
       status_ = Q_TRAN(&flashing);
       break;
     }
     case PLAY_MODE_SIG: 
     {
-      me->mCalibrationMultiplier = 5;
+      me->mCalibrationMultiplier = 40;
       status_ = Q_HANDLED(); 
       break;
     }
     case Z_MODE_SIG: 
     {
-      me->mCalibrationMultiplier = 10;
+      me->mCalibrationMultiplier = 80;
       status_ = Q_HANDLED(); 
       break;
     }
     case FREE_MODE_SIG: 
     {
-      me->mCalibrationMultiplier = 1;
+      me->mCalibrationMultiplier = 8;
       status_ = Q_HANDLED(); 
       break;
     }
