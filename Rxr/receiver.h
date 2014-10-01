@@ -13,12 +13,10 @@ class Receiver {
 public:
   Receiver();
   void ReloadSettings();
+  void GetData();
   long Position();
-<<<<<<< HEAD
   int Velocity();
-  char Mode();
-=======
->>>>>>> origin/master
+  int Mode();
 private:
   Packet packet_;
   void LoadSettings();

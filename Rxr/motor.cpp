@@ -16,20 +16,16 @@ velocity_(0) {
 }
 
 void Motor::set_observed_position(long position) {
-<<<<<<< HEAD
-  observed_position_ = position << microsteps_;
-}
-
-void Motor::set_max_velocity(int velocity) {
-  current_velocity_cap = max_velocity_ * velocity * PERCENT_CONVERSION_FACTOR;
-=======
   long new_position = position >> (3 - microsteps_);
   if (new_position != observed_position_) {
     WakeUp();
     run_count_ = 0;
   }
   observed_position_ = new_position;
->>>>>>> origin/master
+}
+
+void Motor::set_max_velocity(int velocity) {
+  current_velocity_cap_ = max_velocity_ * velocity * PERCENT_CONVERSION_FACTOR;
 }
 
 void Motor::Configure(
@@ -131,7 +127,7 @@ void Motor::Run() {
       (steps_to_go <= GetDecelerationThreshold())) {
       velocity_ -= decel_;
     } else if (calculated_position_ < observed_position_) {
-      velocity_ = util::Min(velocity_+accel_, max_velocity_);
+      velocity_ = util::Min(velocity_+accel_, current_velocity_cap_);
     }
     calculated_position_ += velocity_;
     if((motor_position_ < calculated_position_) &&
@@ -146,7 +142,7 @@ void Motor::Run() {
       (steps_to_go <= GetDecelerationThreshold())){
       velocity_ += decel_;
     } else if (calculated_position_ > observed_position_) {
-      velocity_ = util::Max(velocity_-accel_, -max_velocity_);
+      velocity_ = util::Max(velocity_-accel_, -current_velocity_cap_);
     }
     calculated_position_ += velocity_;
     if(motor_position_ > calculated_position_ &&

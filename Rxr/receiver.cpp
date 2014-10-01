@@ -8,10 +8,10 @@
 #include "receiver.h"
 #include "util.h"
 
-<<<<<<< HEAD
+
 #define PLAYBACK_MODE 1
 #define MAX_VELOCITY 100
-=======
+
 #define RATE_MASK     0b11111000
 #define RATE_250KB    0b00100000
 #define RATE_1MB      0b00000000
@@ -26,7 +26,6 @@
 
 const char rates[] =  { 0b00100000, 0b00000000, 0b00001000 };
 const char levels[] = { 0b00000000, 0b00000010, 0b00000100, 0b00000011 };
->>>>>>> origin/master
 
 Receiver::Receiver() {
   Mirf.spi = &MirfHardwareSpi;
@@ -67,24 +66,30 @@ void Receiver::LoadSettings()
   Mirf.writeRegister(RF_SETUP, (byte *)reg, 1);
 }
 
-<<<<<<< HEAD
-int Receiver::Velocity() {
-  if(packet_.mode==PLAYBACK_MODE)
-    return packet_.velocity;
-  return MAX_VELOCITY;
-=======
 void Receiver::ReloadSettings()
 {
   Mirf.powerDown();  // not sure if this is necessary
   LoadSettings();
   Mirf.config();
->>>>>>> origin/master
 }
 
-long Receiver::Position() {
+void Receiver::GetData() {
   if(Mirf.dataReady()){ // Got packet
     Mirf.getData((byte *) &packet_);
     packet_.position = util::MakeFixed(packet_.position);
   }
-  return packet_.position;
+}
+
+long Receiver::Position(){
+  return packet_.position();
+}
+
+int Receiver::Velocity() {
+  if(packet_.mode==PLAYBACK_MODE)
+    return packet_.velocity;
+  return MAX_VELOCITY;
+}
+
+int Receiver::Mode(){
+  return packet_.mode;
 }
