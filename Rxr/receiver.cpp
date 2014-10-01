@@ -4,6 +4,7 @@
 #include <MirfSpiDriver.h>
 #include <nRF24L01.h>
 #include "Settings.h"
+#include "macros.h"
 #include "receiver.h"
 #include "util.h"
 
@@ -23,7 +24,7 @@ const char rates[] =  { 0b00100000, 0b00000000, 0b00001000 };
 const char levels[] = { 0b00000000, 0b00000010, 0b00000100, 0b00000011 };
 
 Receiver::Receiver() {
-  Mirf.spi = &MirfHardwareSpi; 
+  Mirf.spi = &MirfHardwareSpi;
   Mirf.init(); // Setup pins / SPI
   Mirf.setRADDR((byte *)"serv1"); // Configure recieving address
   Mirf.payload = sizeof(Packet); // Payload length
@@ -40,16 +41,24 @@ void Receiver::LoadSettings()
   if (setting >= 0 && setting <= 3) {
     reg[0] &= PALEVEL_MASK;
     reg[0] |= levels[setting];
-  } 
-  setting = settings.GetDataRate(); 
+  }
+  setting = settings.GetDataRate();
   if (setting >= 0 && setting <= 2) {
     reg[0] &= RATE_MASK;
     reg[0] |= rates[setting];
-  }    
+  }
   setting = settings.GetChannel();
   if (setting >= 0 && setting <= 84) {
     Mirf.channel = setting;
-  }  
+  }
+  setting = settings.GetAntenna();
+  if (setting == 0) {
+    ANT_CTRL2(CLR);
+    ANT_CTRL1(SET);
+  } else {
+    ANT_CTRL1(CLR);
+    ANT_CTRL2(SET);
+  }
   Mirf.writeRegister(RF_SETUP, (byte *)reg, 1);
 }
 
