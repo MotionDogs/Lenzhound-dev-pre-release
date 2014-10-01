@@ -81,7 +81,7 @@ void Receiver::GetData() {
 }
 
 long Receiver::Position(){
-  return packet_.position();
+  return packet_.position;
 }
 
 int Receiver::Velocity() {
