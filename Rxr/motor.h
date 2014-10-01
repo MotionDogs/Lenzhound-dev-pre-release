@@ -10,7 +10,6 @@
 
 class Motor {
 public:
-  long run_count;
   Motor();
   void Configure(long accel, long max_velocity, char microsteps);
   void Run();
@@ -49,11 +48,16 @@ private:
   long calculated_position_;
   long motor_position_;
   long observed_position_;
+  long run_count_;
+  long sleeping_;
 
   void Pulse();
   void SetDirForward();
   void SetDirBackward();
   long GetDecelerationThreshold();
+  bool TrySleep();
+  void Sleep();
+  void WakeUp();
 };
 
 #endif //rxr_motor_h

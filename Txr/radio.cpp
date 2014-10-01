@@ -4,7 +4,7 @@
 #include <MirfSpiDriver.h>
 #include <nRF24L01.h>
 #include "Settings.h"
-#include "Radio.h"
+#include "radio.h"
 
 #define RATE_MASK     0b11111000
 #define RATE_250KB    0b00100000
@@ -61,7 +61,6 @@ void Radio::ReloadSettings()
 
 void Radio::SendPacket(byte *message) {
   if (!Mirf.isSending()) {
-    Serial.println(long(message[0]),HEX);
     Mirf.send(message);
   }
 }

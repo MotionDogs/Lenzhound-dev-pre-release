@@ -8,6 +8,8 @@ direction_(1),
 calculated_position_(0),
 observed_position_(0),
 motor_position_(0),
+run_count_(0),
+sleeping_(false),
 velocity_(0) {
 }
 
@@ -16,7 +18,12 @@ long Motor::observed_position(){
 }
 
 void Motor::set_observed_position(long position) {
-  observed_position_ = position << microsteps_;
+  long new_position = position << microsteps_;
+  if (new_position != observed_position_) {
+    WakeUp();
+    run_count_ = 0;
+  }
+  observed_position_ = new_position;
 }
 
 void Motor::Configure(
@@ -85,7 +92,33 @@ long Motor::GetDecelerationThreshold() {
     util::FixedMultiply(velocity_,velocity_),decel_denominator_);
 }
 
+void Motor::Sleep() {
+  sleeping_ = true;
+  run_count_ = 0;
+  SLEEP_PIN(CLR);
+}
+
+void Motor::WakeUp() {
+  sleeping_ = false;
+  SLEEP_PIN(SET);
+}
+
+bool Motor::TrySleep() {
+  if (sleeping_) {
+    return true;
+  }
+  if (run_count_ > kSleepThreshold) {
+    Sleep();
+    return true;
+  }
+  run_count_++;
+  return false;
+}
+
 void Motor::Run() {
+  if (TrySleep()) {
+    return;
+  }
   long steps_to_go = util::Abs(observed_position_ - calculated_position_);
   if(direction_) {
     if((calculated_position_ > observed_position_) ||
