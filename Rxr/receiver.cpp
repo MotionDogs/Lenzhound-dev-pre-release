@@ -6,6 +6,9 @@
 #include "receiver.h"
 #include "util.h"
 
+#define PLAYBACK_MODE 1
+#define MAX_VELOCITY 100
+
 Receiver::Receiver() {
   Mirf.spi = &MirfHardwareSpi; 
   Mirf.init(); // Setup pins / SPI
@@ -24,8 +27,10 @@ long Receiver::Position() {
   return packet_.position;
 }
 
-char Receiver::Velocity() {
-  return packet_.velocity;
+int Receiver::Velocity() {
+  if(packet_.mode==PLAYBACK_MODE)
+    return packet_.velocity;
+  return MAX_VELOCITY;
 }
 
 char Receiver::Mode() {

@@ -14,7 +14,7 @@ public:
   Receiver();
   void receive_data();
   long Position();
-  char Velocity();
+  int Velocity();
   char Mode();
 private:
   Packet packet_;

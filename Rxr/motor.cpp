@@ -3,6 +3,8 @@
 #include "constants.h"
 #include "util.h"
 
+#define PERCENT_CONVERSION_FACTOR .01
+
 Motor::Motor() :
 direction_(1),
 calculated_position_(0),
@@ -19,8 +21,8 @@ void Motor::set_observed_position(long position) {
   observed_position_ = position << microsteps_;
 }
 
-void Motor::set_max_velocity(char velocity) {
-  current_velocity_cap = max_velocity_ * velocity * .01;
+void Motor::set_max_velocity(int velocity) {
+  current_velocity_cap = max_velocity_ * velocity * PERCENT_CONVERSION_FACTOR;
 }
 
 void Motor::Configure(
