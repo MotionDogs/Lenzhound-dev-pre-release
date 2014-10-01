@@ -16,7 +16,6 @@ public:
   void Run();
   long observed_position();
   void set_observed_position(long position);
-  void set_max_velocity(char velocity);
   void inspect() {
     Serial.print("direction_: ");
     Serial.println(direction_);
@@ -43,7 +42,6 @@ private:
   char microsteps_;
   bool direction_;
   long max_velocity_;
-  long current_velocity_cap;
   long accel_;
   long decel_;
   long decel_denominator_;

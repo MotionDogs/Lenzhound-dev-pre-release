@@ -13,21 +13,11 @@ Receiver::Receiver() {
   Mirf.payload = sizeof(Packet); // Payload length
   Mirf.config(); // Power up reciver
 }
-void Receiver::receive_data(){
+
+long Receiver::Position() {
   if(Mirf.dataReady()){ // Got packet
     Mirf.getData((byte *) &packet_);
     packet_.position = util::MakeFixed(packet_.position);
   }
-}
-
-long Receiver::Position() {
   return packet_.position;
-}
-
-char Receiver::Velocity() {
-  return packet_.velocity;
-}
-
-char Receiver::Mode() {
-  return packet_.mode;
 }
