@@ -21,10 +21,11 @@ Q_DEFINE_THIS_FILE
 
 // various timeouts in ticks
 enum TxrTimeouts {                            
-  SEND_ENCODER_TOUT  = BSP_TICKS_PER_SEC / 100,     // how often to send encoder position
-  FLASH_RATE_TOUT = BSP_TICKS_PER_SEC / 2,      // how quick to flash LED
-  FLASH_DURATION_TOUT = BSP_TICKS_PER_SEC *2,            // how long to flash LED for
-  ENTER_CALIBRATION_TOUT = BSP_TICKS_PER_SEC * 2    // how long to hold calibration button before reentering calibration
+  SEND_ENCODER_TOUT  = BSP_TICKS_PER_SEC / 100,   // how often to send encoder position
+  FLASH_RATE_TOUT = BSP_TICKS_PER_SEC / 2,        // how quick to flash LED
+  FLASH_DURATION_TOUT = BSP_TICKS_PER_SEC *2,     // how long to flash LED for
+  ENTER_CALIBRATION_TOUT = BSP_TICKS_PER_SEC * 2, // how long to hold calibration button before reentering calibration
+  ALIVE_DURATION_TOUT = BSP_TICKS_PER_SEC / 2     // how long to flash the "I'm Aliave" LED
 };
 
 // todo: move this somewhere else or do differently
@@ -37,6 +38,7 @@ long map(long x, long in_min, long in_max, long out_min, long out_max)
 class Txr : 
 public QP::QActive {
 private:
+  QTimeEvt mAliveTimeout;
   QTimeEvt mFlashTimeout;
   QTimeEvt mSendTimeout;
   QTimeEvt mCalibrationTimeout;
@@ -57,12 +59,13 @@ public:
   Txr() : 
   QActive((QStateHandler)&Txr::initial), 
   mFlashTimeout(FLASH_RATE_SIG), mSendTimeout(SEND_TIMEOUT_SIG),
-  mCalibrationTimeout(CALIBRATION_SIG)
+  mCalibrationTimeout(CALIBRATION_SIG), mAliveTimeout(ALIVE_SIG)
   {
   }
 
 protected:
   static QP::QState initial(Txr * const me, QP::QEvt const * const e);
+  static QP::QState on(Txr * const me, QP::QEvt const * const e);
   static QP::QState uncalibrated(Txr * const me, QP::QEvt const * const e);
   static QP::QState calibrated(Txr * const me, QP::QEvt const * const e);
   static QP::QState flashing(Txr * const me, QP::QEvt const * const e);
@@ -132,7 +135,42 @@ QP::QState Txr::initial(Txr * const me, QP::QEvt const * const e) {
   me->subscribe(POSITION_BUTTON_SIG);
   me->subscribe(UPDATE_PARAMS_SIG);
   me->mSendTimeout.postEvery(me, SEND_ENCODER_TOUT);
+  me->mAliveTimeout.postEvery(me, ALIVE_DURATION_TOUT);
   return Q_TRAN(&uncalibrated);
+}
+
+QP::QState Txr::on(Txr * const me, QP::QEvt const * const e) {
+  QP::QState status_;
+  switch (e->sig) {
+    case Q_ENTRY_SIG: 
+    {
+      status_ = Q_HANDLED();
+      break;
+    }
+    case Q_EXIT_SIG: 
+    {
+      status_ = Q_HANDLED();
+      break;
+    }
+    case ALIVE_SIG:
+    {
+      GREEN2_LED_TOGGLE();
+      status_ = Q_HANDLED();
+      break;
+    }
+    case UPDATE_PARAMS_SIG:
+    {
+      BSP_UpdateRadioParams();
+      status_ = Q_HANDLED();
+      break;
+    }
+    default: 
+    {
+      status_ = Q_SUPER(&QP::QHsm::top);
+      break;
+    }
+  }
+  return status_;
 }
 
 QP::QState Txr::uncalibrated(Txr * const me, QP::QEvt const * const e) {
@@ -189,15 +227,9 @@ QP::QState Txr::uncalibrated(Txr * const me, QP::QEvt const * const e) {
       status_ = Q_HANDLED(); 
       break;
     }
-    case UPDATE_PARAMS_SIG:
-    {
-      BSP_UpdateRadioParams();
-      status_ = Q_HANDLED();
-      break;
-    }
     default: 
     {
-      status_ = Q_SUPER(&QP::QHsm::top);
+      status_ = Q_SUPER(&on);
       break;
     }
   }
@@ -257,15 +289,9 @@ QP::QState Txr::calibrated(Txr * const me, QP::QEvt const * const e) {
       status_ = Q_TRAN(&freeRun);
       break;
     }
-    case UPDATE_PARAMS_SIG:
-    {
-      BSP_UpdateRadioParams();
-      status_ = Q_HANDLED();
-      break;
-    }
     default:
     {
-      status_ = Q_SUPER(&QP::QHsm::top);
+      status_ = Q_SUPER(&on);
       break;
     }
   }

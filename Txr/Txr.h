@@ -21,6 +21,7 @@ enum PelicanSignals {
     Z_MODE_SIG,
     POSITION_BUTTON_SIG,
     UPDATE_PARAMS_SIG,
+    ALIVE_SIG,
     MAX_PUB_SIG,  // the last published signal
 
     SEND_TIMEOUT_SIG,

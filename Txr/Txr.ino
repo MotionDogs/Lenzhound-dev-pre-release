@@ -27,7 +27,6 @@
 
 // Local-scope objects -------------------------------------------------------
 static QEvt const *txrQueueSto[10];
-static QEvt const *blinkyQueueSto[10]; // allocate event queue buffer
 static QSubscrList subscrSto[MAX_PUB_SIG];
 
 static QF_MPOOL_EL(PositionButtonEvt) smlPoolSto[10]; // storage for the small event pool
@@ -49,7 +48,6 @@ void setup() {
 
   // start the active objects...
   AO_Txr->start(1U, txrQueueSto, Q_DIM(txrQueueSto), (void *)0, 0U);
-  AO_Blinky->start(2U, blinkyQueueSto, Q_DIM(blinkyQueueSto), (void *)0, 0U);
 }
 
 //////////////////////////////////////////////////////////////////////////////
