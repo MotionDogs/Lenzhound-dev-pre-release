@@ -8,6 +8,7 @@
 // or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
 // for more details.
 //****************************************************************************
+
 #include "qp_port.h"
 #include "bsp.h"
 #include "RollingAverager.h"
@@ -129,6 +130,7 @@ QP::QState Txr::initial(Txr * const me, QP::QEvt const * const e) {
   me->subscribe(FREE_MODE_SIG);
   me->subscribe(Z_MODE_SIG);
   me->subscribe(POSITION_BUTTON_SIG);
+  me->subscribe(UPDATE_PARAMS_SIG);
   me->mSendTimeout.postEvery(me, SEND_ENCODER_TOUT);
   return Q_TRAN(&uncalibrated);
 }
@@ -185,6 +187,12 @@ QP::QState Txr::uncalibrated(Txr * const me, QP::QEvt const * const e) {
     {
       me->mCalibrationMultiplier = 8;
       status_ = Q_HANDLED(); 
+      break;
+    }
+    case UPDATE_PARAMS_SIG:
+    {
+      BSP_UpdateRadioParams();
+      status_ = Q_HANDLED();
       break;
     }
     default: 
@@ -247,6 +255,12 @@ QP::QState Txr::calibrated(Txr * const me, QP::QEvt const * const e) {
     case FREE_MODE_SIG:
     {
       status_ = Q_TRAN(&freeRun);
+      break;
+    }
+    case UPDATE_PARAMS_SIG:
+    {
+      BSP_UpdateRadioParams();
+      status_ = Q_HANDLED();
       break;
     }
     default:

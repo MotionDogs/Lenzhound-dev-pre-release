@@ -1,4 +1,6 @@
+#include "qp_port.h"
 #include "Console.h"
+#include "Txr.h"
 #include <CmdMessenger.h>
 #include "Settings.h"
 
@@ -63,6 +65,7 @@ void OnSetChannel()
   int val = cmdMessenger.readInt16Arg();
   settings.SetChannel(val);
   Serial.println(SUCCESS);
+  QF::PUBLISH(Q_NEW(QEvt, UPDATE_PARAMS_SIG), &OnSetChannel);
 }
 
 void OnGetChannel()
@@ -77,6 +80,7 @@ void OnSetPALevel()
   int val = cmdMessenger.readInt16Arg();
   settings.SetPALevel(val);
   Serial.println(SUCCESS);
+  QF::PUBLISH(Q_NEW(QEvt, UPDATE_PARAMS_SIG), &OnSetPALevel);
 }
 
 void OnGetPALevel()
@@ -91,6 +95,7 @@ void OnSetDataRate()
   int val = cmdMessenger.readInt16Arg();
   settings.SetDataRate(val);
   Serial.println(SUCCESS);
+  QF::PUBLISH(Q_NEW(QEvt, UPDATE_PARAMS_SIG), &OnSetDataRate);
 }
 
 void OnGetDataRate()
