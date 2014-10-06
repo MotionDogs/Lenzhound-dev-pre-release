@@ -25,7 +25,7 @@ void Motor::set_observed_position(long position) {
 }
 
 void Motor::set_max_velocity(int velocity) {
-  current_velocity_cap_ = max_velocity_ * velocity * PERCENT_CONVERSION_FACTOR;
+  current_velocity_cap_ = max(max_velocity_ * velocity * PERCENT_CONVERSION_FACTOR, 1L);
 }
 
 void Motor::Configure(
