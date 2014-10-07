@@ -57,11 +57,11 @@ void Receiver::LoadSettings()
   }
   setting = settings.GetAntenna();
   if (setting == 0) {
-    ANT_CTRL2(CLR);
-    ANT_CTRL1(SET);
-  } else {
-    ANT_CTRL1(CLR);
     ANT_CTRL2(SET);
+    ANT_CTRL1(CLR);
+  } else {
+    ANT_CTRL1(SET);
+    ANT_CTRL2(CLR);
   }
   Mirf.writeRegister(RF_SETUP, (byte *)reg, 1);
 }
