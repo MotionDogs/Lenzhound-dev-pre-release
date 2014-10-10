@@ -106,6 +106,10 @@ void Motor::WakeUp() {
 }
 
 bool Motor::TrySleep() {
+  if (motor_position_ != observed_position_) {
+    run_count_ = 0;
+    return false;
+  }
   if (sleeping_) {
     return true;
   }
