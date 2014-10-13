@@ -194,6 +194,22 @@ int BSP_GetPot()
   return analogRead(A0);
 }
 
+int BSP_GetMode()
+{
+  // basically duplicates what's in the ISR above, 
+  // but sharing the code wouldn't be so efficient in this case
+  int buttonState = MODE_SWITCHES();
+  if (buttonState & 0x10) {
+    return Z_MODE;
+  } 
+  else if (buttonState & 0x40) {
+    return FREE_MODE;
+  }
+  else {
+    return PLAYBACK_MODE;
+  }
+}
+
 void BSP_TurnOnSpeedLED(char num)
 {
   switch (num) {
