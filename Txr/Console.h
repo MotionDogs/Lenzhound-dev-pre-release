@@ -29,5 +29,7 @@ void OnSetPALevel();
 void OnGetPALevel();
 void OnSetDataRate();
 void OnGetDataRate();
+void OnGetAllValues();
+int CheckBoundsInclusive(int val, int min, int max);
 
 #endif

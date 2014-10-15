@@ -7,18 +7,20 @@
 CmdMessenger cmdMessenger = CmdMessenger(Serial);
 static Settings settings;
 static const char SUCCESS[] = "SUCCESS";
+static const char ERROR[] = "ERROR";
 
 // This is the list of recognized commands.  
 // In order to receive, attach a callback function to these events
 enum
 {
-  COMMAND_LIST,
+  COMMAND_LIST = 0,
   SET_CHANNEL = 9,
   GET_CHANNEL,
   SET_PALEVEL,
   GET_PALEVEL,
   SET_DATARATE,
-  GET_DATARATE
+  GET_DATARATE,
+  GET_ALL_VALS
 };
 
 Console::Console()
@@ -51,6 +53,7 @@ void ShowCommands()
   Serial.println(" 12;                    - Get Power Amp Level");
   Serial.println(" 13,<data rate>;        - Set Data Rate (0-2)");
   Serial.println(" 14;                    - Get Data Rate");
+  Serial.println(" 15;                    - Get All");
 }
 
 void OnUnknownCommand()
@@ -63,9 +66,11 @@ void OnSetChannel()
 {
   // todo: what happens if there is no arg?
   int val = cmdMessenger.readInt16Arg();
-  settings.SetChannel(val);
-  Serial.println(SUCCESS);
-  QF::PUBLISH(Q_NEW(QEvt, UPDATE_PARAMS_SIG), &OnSetChannel);
+  if (CheckBoundsInclusive(val, 0, 84)) {
+    settings.SetChannel(val);
+    Serial.println(SUCCESS);
+    QF::PUBLISH(Q_NEW(QEvt, UPDATE_PARAMS_SIG), &OnSetChannel);
+  }  
 }
 
 void OnGetChannel()
@@ -78,9 +83,11 @@ void OnSetPALevel()
 {
   // todo: what happens if there is no arg?
   int val = cmdMessenger.readInt16Arg();
-  settings.SetPALevel(val);
-  Serial.println(SUCCESS);
-  QF::PUBLISH(Q_NEW(QEvt, UPDATE_PARAMS_SIG), &OnSetPALevel);
+  if (CheckBoundsInclusive(val, 0, 3)) {
+    settings.SetPALevel(val);
+    Serial.println(SUCCESS);
+    QF::PUBLISH(Q_NEW(QEvt, UPDATE_PARAMS_SIG), &OnSetPALevel);
+  }  
 }
 
 void OnGetPALevel()
@@ -93,9 +100,11 @@ void OnSetDataRate()
 {
   // todo: what happens if there is no arg?
   int val = cmdMessenger.readInt16Arg();
-  settings.SetDataRate(val);
-  Serial.println(SUCCESS);
-  QF::PUBLISH(Q_NEW(QEvt, UPDATE_PARAMS_SIG), &OnSetDataRate);
+  if (CheckBoundsInclusive(val, 0, 2)) {
+    settings.SetDataRate(val);
+    Serial.println(SUCCESS);
+    QF::PUBLISH(Q_NEW(QEvt, UPDATE_PARAMS_SIG), &OnSetDataRate);
+  }    
 }
 
 void OnGetDataRate()
@@ -110,6 +119,22 @@ void OnCommandList()
   ShowCommands();
 }
 
+void OnGetAllValues()
+{
+  OnGetChannel();
+  OnGetPALevel();
+  OnGetDataRate();
+}
+
+int CheckBoundsInclusive(int val, int min, int max)
+{
+  if (val < min || val > max) {
+    Serial.println(ERROR);
+    return false;
+  }
+  return true;
+}
+
 // Callbacks define on which received commands we take action
 void Console::AttachCommandCallbacks()
 {
@@ -122,6 +147,7 @@ void Console::AttachCommandCallbacks()
   cmdMessenger.attach(GET_PALEVEL, OnGetPALevel);
   cmdMessenger.attach(SET_DATARATE, OnSetDataRate);
   cmdMessenger.attach(GET_DATARATE, OnGetDataRate);
+  cmdMessenger.attach(GET_ALL_VALS, OnGetAllValues);
 }
 
 

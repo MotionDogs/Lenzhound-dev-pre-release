@@ -5,6 +5,7 @@
 CmdMessenger cmdMessenger = CmdMessenger(Serial);
 static Settings settings;
 static const char SUCCESS[] = "SUCCESS";
+static const char ERROR[] = "ERROR";
 
 // This is the list of recognized commands.  
 // In order to receive, attach a callback function to these events
@@ -24,7 +25,8 @@ enum
   SET_PALEVEL,
   GET_PALEVEL,
   SET_DATARATE,
-  GET_DATARATE
+  GET_DATARATE,
+  GET_ALL_VALS
 };
 
 Console::Console()
@@ -65,6 +67,7 @@ void ShowCommands()
   Serial.println(" 12;                    - Get Power Amp Level");
   Serial.println(" 13,<data rate>;        - Set Data Rate (0-2)");
   Serial.println(" 14;                    - Get Data Rate");
+  Serial.println(" 15;                    - Get All");
 }
 
 void OnUnknownCommand()
@@ -77,8 +80,10 @@ void OnSetMaxVel()
 {
   // todo: what happens if there is no arg?
   long val = cmdMessenger.readInt32Arg();
-  settings.SetMaxVelocity(val);
-  Serial.println(SUCCESS);
+  if (CheckBoundsInclusive(val, 10, 32000)) {
+    settings.SetMaxVelocity(val);
+    Serial.println(SUCCESS);
+  }  
 }
 
 void OnGetMaxVel()
@@ -91,8 +96,10 @@ void OnSetAccel()
 {
   // todo: what happens if there is no arg?
   long val = cmdMessenger.readInt32Arg();
-  settings.SetAcceleration(val);
-  Serial.println(SUCCESS);
+  if (CheckBoundsInclusive(val, 1, 32000)) {
+    settings.SetAcceleration(val);
+    Serial.println(SUCCESS);
+  }  
 }
 
 void OnGetAccel()
@@ -105,8 +112,10 @@ void OnSetResolution()
 {
   // todo: what happens if there is no arg?
   int val = cmdMessenger.readInt16Arg();
-  settings.SetMicrosteps(val);
-  Serial.println(SUCCESS);
+  if (CheckBoundsInclusive(val, 0, 3)) {
+    settings.SetMicrosteps(val);
+    Serial.println(SUCCESS);
+  }    
 }
 
 void OnGetResolution()
@@ -119,8 +128,10 @@ void OnSetAntenna()
 {
   // todo: what happens if there is no arg?
   int val = cmdMessenger.readInt16Arg();
-  settings.SetAntenna(val);
-  Serial.println(SUCCESS);
+  if (CheckBoundsInclusive(val, 0, 1)) {
+    settings.SetAntenna(val);
+    Serial.println(SUCCESS);
+  }  
 }
 
 void OnGetAntenna()
@@ -133,8 +144,10 @@ void OnSetChannel()
 {
   // todo: what happens if there is no arg?
   int val = cmdMessenger.readInt16Arg();
-  settings.SetChannel(val);
-  Serial.println(SUCCESS);
+  if (CheckBoundsInclusive(val, 0, 84)) {
+    settings.SetChannel(val);
+    Serial.println(SUCCESS);
+  }  
 }
 
 void OnGetChannel()
@@ -147,8 +160,10 @@ void OnSetPALevel()
 {
   // todo: what happens if there is no arg?
   int val = cmdMessenger.readInt16Arg();
-  settings.SetPALevel(val);
-  Serial.println(SUCCESS);
+  if (CheckBoundsInclusive(val, 0, 3)) {
+    settings.SetPALevel(val);
+    Serial.println(SUCCESS);
+  }  
 }
 
 void OnGetPALevel()
@@ -161,8 +176,10 @@ void OnSetDataRate()
 {
   // todo: what happens if there is no arg?
   int val = cmdMessenger.readInt16Arg();
-  settings.SetDataRate(val);
-  Serial.println(SUCCESS);
+  if (CheckBoundsInclusive(val, 0, 2)) {
+    settings.SetDataRate(val);
+    Serial.println(SUCCESS);
+  }    
 }
 
 void OnGetDataRate()
@@ -175,6 +192,26 @@ void OnGetDataRate()
 void OnCommandList()
 {
   ShowCommands();
+}
+
+void OnGetAllValues()
+{
+  OnGetMaxVel();
+  OnGetAccel();
+  OnGetResolution();
+  OnGetAntenna();
+  OnGetChannel();
+  OnGetPALevel();
+  OnGetDataRate();
+}
+
+int CheckBoundsInclusive(int val, int min, int max)
+{
+  if (val < min || val > max) {
+    Serial.println(ERROR);
+    return false;
+  }
+  return true;
 }
 
 // Callbacks define on which received commands we take action
@@ -197,6 +234,7 @@ void Console::AttachCommandCallbacks()
   cmdMessenger.attach(GET_PALEVEL, OnGetPALevel);
   cmdMessenger.attach(SET_DATARATE, OnSetDataRate);
   cmdMessenger.attach(GET_DATARATE, OnGetDataRate);
+  cmdMessenger.attach(GET_ALL_VALS, OnGetAllValues);
 }
 
 
