@@ -5,10 +5,11 @@
 class Radio {
 public:
   Radio(int packetSize);
-  void ReloadSettings();
+  void ReloadSettings(int constantWave);
   void SendPacket(byte* message);
+  void SendConstantWave();
 private:
-  void LoadSettings();
+  void LoadSettings(int constantWave);
 };
 
 #endif //Radio_h

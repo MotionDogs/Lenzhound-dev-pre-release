@@ -97,7 +97,8 @@ int  BSP_GetPot();
 int  BSP_GetMode();
 void BSP_TurnOnSpeedLED(char num);
 void BSP_TurnOffSpeedLED(char num);
-void BSP_UpdateRadioParams();
+void BSP_UpdateRadioParams(int constantWave);
+void BSP_SendConstantWave();
 
 /////////////////////////////////////////////////////////////////////
 // NOTE: The CPU clock frequency F_CPU is defined externally for each

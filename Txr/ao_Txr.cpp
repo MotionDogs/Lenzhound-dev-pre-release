@@ -71,6 +71,7 @@ protected:
   static QP::QState flashing(Txr * const me, QP::QEvt const * const e);
   static QP::QState freeRun(Txr * const me, QP::QEvt const * const e);
   static QP::QState playBack(Txr * const me, QP::QEvt const * const e);
+  static QP::QState zMode(Txr * const me, QP::QEvt const * const e);
   void UpdatePosition(Txr *const me);
   void UpdatePositionCalibration(Txr *const me);  
   void UpdatePositionPlayBack(Txr *const me);  
@@ -177,7 +178,7 @@ QP::QState Txr::on(Txr * const me, QP::QEvt const * const e) {
     }
     case UPDATE_PARAMS_SIG:
     {
-      BSP_UpdateRadioParams();
+      BSP_UpdateRadioParams(false);
       status_ = Q_HANDLED();
       break;
     }
@@ -299,7 +300,7 @@ QP::QState Txr::calibrated(Txr * const me, QP::QEvt const * const e) {
     }
     case Z_MODE_SIG:
     {
-      status_ = Q_TRAN(&playBack);
+      status_ = Q_TRAN(&zMode);
       break;
     }
     case FREE_MODE_SIG:
@@ -460,6 +461,48 @@ QP::QState Txr::playBack(Txr * const me, QP::QEvt const * const e) {
       Q_REQUIRE(buttonNum < NUM_POSITION_BUTTONS);
       me->mCurPos = me->mSavedPositions[buttonNum];
       status_ = Q_HANDLED();
+      break;
+    }
+    default: 
+    {
+      status_ = Q_SUPER(&calibrated);
+      break;
+    }
+  }
+  return status_;
+}
+
+// temporarily using zmode to do FCC testing
+QP::QState Txr::zMode(Txr * const me, QP::QEvt const * const e) {
+  QP::QState status_;
+  switch (e->sig) {
+    case Q_ENTRY_SIG: 
+    {
+      ENC_GREEN_LED_ON();
+      ENC_RED_LED_ON();
+      AMBER2_LED_ON();
+      AMBER_LED_ON();
+      BSP_UpdateRadioParams(true);
+      status_ = Q_HANDLED();
+      break;
+    }
+    case Q_EXIT_SIG: 
+    {
+      me->mVelocityManager.SetAllLEDsOff();
+      BSP_UpdateRadioParams(false);
+      status_ = Q_HANDLED();
+      break;
+    }
+    case UPDATE_PARAMS_SIG:
+    {
+      BSP_UpdateRadioParams(true);
+      status_ = Q_HANDLED();
+      break;
+    }
+    case SEND_TIMEOUT_SIG: 
+    {
+      BSP_SendConstantWave();          
+      status_ = Q_HANDLED(); 
       break;
     }
     default: 

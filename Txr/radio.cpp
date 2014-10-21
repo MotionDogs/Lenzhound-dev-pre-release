@@ -6,7 +6,7 @@
 #include "Settings.h"
 #include "radio.h"
 
-#define RATE_MASK     0b11111000
+#define RATE_MASK     0b00101000
 #define RATE_250KB    0b00100000
 #define RATE_1MB      0b00000000
 #define RATE_2MB      0b00001000
@@ -26,23 +26,30 @@ Radio::Radio(int packetSize) {
   Mirf.init(); // Setup pins / SPI
   Mirf.setTADDR((byte *)"serv1");
   Mirf.payload = packetSize; // Payload length
-  LoadSettings();
+  LoadSettings(false);
   Mirf.config(); // Power up reciver
 }
 
-void Radio::LoadSettings()
+// todo: the application of these masks is wrong.  Fix in master branch.
+void Radio::LoadSettings(int constantWave)
 {
 	// Get and apply settings if within allowable ranges
   Settings settings;
   byte reg[] =  {RF_DEFAULT,0}; 
+  
+  // for FCC testing
+  if (constantWave) {
+    reg[0] |= 0b10000000;
+  }
+  
   int setting = settings.GetPALevel();
   if (setting >= 0 && setting <= 3) {
-    reg[0] &= PALEVEL_MASK;
+    reg[0] &= ~PALEVEL_MASK;
     reg[0] |= levels[setting];
   } 
   setting = settings.GetDataRate(); 
   if (setting >= 0 && setting <= 2) {
-    reg[0] &= RATE_MASK;
+    reg[0] &= ~RATE_MASK;
     reg[0] |= rates[setting];
   }    
   setting = settings.GetChannel();
@@ -52,15 +59,23 @@ void Radio::LoadSettings()
   Mirf.writeRegister(RF_SETUP, (byte *)reg, 1);
 }
 
-void Radio::ReloadSettings()
+void Radio::ReloadSettings(int constantWave)
 {
   Mirf.powerDown();  // not sure if this is necessary
-  LoadSettings();
+  LoadSettings(constantWave);
   Mirf.config();
 }
 
-void Radio::SendPacket(byte *message) {
+void Radio::SendPacket(byte *message) 
+{
   if (!Mirf.isSending()) {
     Mirf.send(message);
+  }
+}
+
+void Radio::SendConstantWave()
+{
+  if (!Mirf.isSending()) {
+    Mirf.send(0);
   }
 }

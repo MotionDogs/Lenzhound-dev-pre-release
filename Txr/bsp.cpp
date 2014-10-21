@@ -246,9 +246,14 @@ void BSP_TurnOffSpeedLED(char num)
   }
 }
 
-void BSP_UpdateRadioParams()
+void BSP_UpdateRadioParams(int constantWave)
 {
-  radio.ReloadSettings();
+  radio.ReloadSettings(constantWave);
+}
+
+void BSP_SendConstantWave()
+{
+  radio.SendConstantWave();
 }
 
 //............................................................................
