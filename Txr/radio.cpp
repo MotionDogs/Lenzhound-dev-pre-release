@@ -6,7 +6,7 @@
 #include "Settings.h"
 #include "radio.h"
 
-#define RATE_MASK     0b11111000
+#define RATE_MASK     0b00101000
 #define RATE_250KB    0b00100000
 #define RATE_1MB      0b00000000
 #define RATE_2MB      0b00001000
@@ -37,12 +37,12 @@ void Radio::LoadSettings()
   byte reg[] =  {RF_DEFAULT,0}; 
   int setting = settings.GetPALevel();
   if (setting >= 0 && setting <= 3) {
-    reg[0] &= PALEVEL_MASK;
+    reg[0] &= ~PALEVEL_MASK;
     reg[0] |= levels[setting];
   } 
   setting = settings.GetDataRate(); 
   if (setting >= 0 && setting <= 2) {
-    reg[0] &= RATE_MASK;
+    reg[0] &= ~RATE_MASK;
     reg[0] |= rates[setting];
   }    
   setting = settings.GetChannel();

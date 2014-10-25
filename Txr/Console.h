@@ -3,6 +3,12 @@
 
 #include "Settings.h"
 
+// this shouldn't go here, but it's late and I'm tired
+// and Console IS the only place it's referenced
+#define CURRENT_VERSION "0.1.10"
+
+class String;
+
 class Console
 {
 public:
@@ -11,17 +17,11 @@ public:
   void Run();
 private:
   void AttachCommandCallbacks();
-  //void OnSetMaxVel();
-  //void OnGetMaxVel();
-  //void OnUnknownCommand();
-  //void OnCommandList();
-  //void ShowCommands();
 };
 
 // have to make these external to class because can't attach member functions
 // to handlers
 // todo: look into a better way
-// todo: add range checks to all these
 void OnCommandList();
 void OnSetChannel();
 void OnGetChannel();
@@ -31,5 +31,7 @@ void OnSetDataRate();
 void OnGetDataRate();
 void OnGetAllValues();
 int CheckBoundsInclusive(int val, int min, int max);
+void PrintSuccess(long val, String param);
+void OnGetVersionNumber();
 
 #endif

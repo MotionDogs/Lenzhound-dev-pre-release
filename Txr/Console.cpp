@@ -14,13 +14,9 @@ static const char ERROR[] = "ERROR";
 enum
 {
   COMMAND_LIST = 0,
-  SET_CHANNEL = 9,
-  GET_CHANNEL,
+  SET_CHANNEL = 4,
   SET_PALEVEL,
-  GET_PALEVEL,
   SET_DATARATE,
-  GET_DATARATE,
-  GET_ALL_VALS
 };
 
 Console::Console()
@@ -47,13 +43,11 @@ void ShowCommands()
 {
   Serial.println("Available commands");
   Serial.println(" 0;                     - This command list");
-  Serial.println(" 9,<channel>;           - Set Channel Num (0-84)");
-  Serial.println(" 10;                    - Get Channel");
-  Serial.println(" 11,<PA level>;         - Set Power Amp Level (0-3)");
-  Serial.println(" 12;                    - Get Power Amp Level");
-  Serial.println(" 13,<data rate>;        - Set Data Rate (0-2)");
-  Serial.println(" 14;                    - Get Data Rate");
-  Serial.println(" 15;                    - Get All");
+  Serial.println(" 4,<channel>;           - Set Channel Num (0-84)");
+  Serial.println(" 5,<PA level>;          - Set Power Amp Level (0=-18; 1=-12; 2=-6; 3=0)[dBm]");
+  Serial.println(" 6,<data rate>;         - Set Data Rate (0=.250; 1=1; 2=2)[Mbps]");
+  Serial.println("Current values");
+  OnGetAllValues();
 }
 
 void OnUnknownCommand()
@@ -62,20 +56,33 @@ void OnUnknownCommand()
   ShowCommands();
 }
 
+void PrintSuccess(long val, String param)
+{
+  Serial.print(param);
+  Serial.print(": ");
+  Serial.println(val);
+}
+
+void OnGetVersionNumber()
+{
+  Serial.print(" Version: ");
+  Serial.println(CURRENT_VERSION);
+}
+
 void OnSetChannel()
 {
   // todo: what happens if there is no arg?
   int val = cmdMessenger.readInt16Arg();
   if (CheckBoundsInclusive(val, 0, 84)) {
     settings.SetChannel(val);
-    Serial.println(SUCCESS);
+    PrintSuccess(val, "Channel");
     QF::PUBLISH(Q_NEW(QEvt, UPDATE_PARAMS_SIG), &OnSetChannel);
   }  
 }
 
 void OnGetChannel()
 {
-  Serial.print("Channel: ");
+  Serial.print(" Channel: ");
   Serial.println(settings.GetChannel());
 }
 
@@ -85,14 +92,14 @@ void OnSetPALevel()
   int val = cmdMessenger.readInt16Arg();
   if (CheckBoundsInclusive(val, 0, 3)) {
     settings.SetPALevel(val);
-    Serial.println(SUCCESS);
+    PrintSuccess(val, "PA Level");
     QF::PUBLISH(Q_NEW(QEvt, UPDATE_PARAMS_SIG), &OnSetPALevel);
   }  
 }
 
 void OnGetPALevel()
 {
-  Serial.print("PA Level: ");
+  Serial.print(" PA Level: ");
   Serial.println(settings.GetPALevel());
 }
 
@@ -102,14 +109,14 @@ void OnSetDataRate()
   int val = cmdMessenger.readInt16Arg();
   if (CheckBoundsInclusive(val, 0, 2)) {
     settings.SetDataRate(val);
-    Serial.println(SUCCESS);
+    PrintSuccess(val, "Data Rate");
     QF::PUBLISH(Q_NEW(QEvt, UPDATE_PARAMS_SIG), &OnSetDataRate);
   }    
 }
 
 void OnGetDataRate()
 {
-  Serial.print("Data Rate: ");
+  Serial.print(" Data Rate: ");
   Serial.println(settings.GetDataRate());
 }
 
@@ -121,6 +128,7 @@ void OnCommandList()
 
 void OnGetAllValues()
 {
+  OnGetVersionNumber();
   OnGetChannel();
   OnGetPALevel();
   OnGetDataRate();
@@ -142,12 +150,8 @@ void Console::AttachCommandCallbacks()
   cmdMessenger.attach(OnUnknownCommand);
   cmdMessenger.attach(COMMAND_LIST, OnCommandList);
   cmdMessenger.attach(SET_CHANNEL, OnSetChannel);
-  cmdMessenger.attach(GET_CHANNEL, OnGetChannel);
   cmdMessenger.attach(SET_PALEVEL, OnSetPALevel);
-  cmdMessenger.attach(GET_PALEVEL, OnGetPALevel);
   cmdMessenger.attach(SET_DATARATE, OnSetDataRate);
-  cmdMessenger.attach(GET_DATARATE, OnGetDataRate);
-  cmdMessenger.attach(GET_ALL_VALS, OnGetAllValues);
 }
 
 
