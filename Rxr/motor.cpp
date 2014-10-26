@@ -6,13 +6,20 @@
 #define PERCENT_CONVERSION_FACTOR .01
 
 Motor::Motor() :
+microsteps_(0),
 direction_(1),
+max_velocity_(0),
+current_velocity_cap_(0),
+accel_(0),
+decel_(0),
+decel_denominator_(0),
+velocity_(0),
 calculated_position_(0),
-observed_position_(0),
 motor_position_(0),
+observed_position_(0),
 run_count_(0),
-sleeping_(false),
-velocity_(0) {
+sleeping_(false)
+{
 }
 
 void Motor::set_observed_position(long position) {
