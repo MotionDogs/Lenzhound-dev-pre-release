@@ -1,5 +1,5 @@
 ARDUINO_DIR		= /usr/share/arduino
-ARDMK_DIR 		:= $(realpath ../tools/arduino-mk)
+ARDMK_DIR 		:= $(realpath ../tools/arduino-make)
 AVR_TOOLS_DIR	= /usr
 
 BOARD_TAG		= leonardo
