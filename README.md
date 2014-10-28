@@ -11,29 +11,29 @@ First, make sure you have the 1.5.x beta for Arduino installed
 And install [CMake](http://www.cmake.org/download/)
 
 ###Linux/OSX
-Clone the repo
+Clone the repo:
 ```
 git clone https://github.com/MotionDogs/Lenzhound.git
 ```
 
-Build
+Build:
 ```
 cd Lenzhound/
 cmake .
 make
 ```
 
-Test
+Test:
 ```
 make run-tests
 ```
 
-Plug in the transmitter unit and call
+Plug in the transmitter unit and call:
 ```
 make upload-txr
 ```
 
-Then plug in the receiver unit and call
+Then plug in the receiver unit and call:
 ```
 make upload-rxr
 ```
