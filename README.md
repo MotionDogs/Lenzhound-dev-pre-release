@@ -6,7 +6,7 @@ First, make sure you have the 1.5.x beta for Arduino installed
 
 - [Windows](http://downloads.arduino.cc/arduino-1.5.8-windows.exe)
 - [OSX](http://downloads.arduino.cc/arduino-1.5.8-macosx.zip)
-- Linux [32](http://downloads.arduino.cc/arduino-1.5.8-linux32.tgz)[64](http://downloads.arduino.cc/arduino-1.5.8-linux64.tgz)
+- Linux - [32](http://downloads.arduino.cc/arduino-1.5.8-linux32.tgz) - [64](http://downloads.arduino.cc/arduino-1.5.8-linux64.tgz)
 
 ###Linux
 Clone the repo
