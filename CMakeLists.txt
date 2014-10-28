@@ -8,10 +8,11 @@ add_subdirectory(test)
 
 set(BOARD arduino:avr:leonardo)
 
+SET(PORT_DESC "USB port to connect to Arduino unit")
 if(WIN32)
-	set(PORT com3)
+	set(PORT com3 CACHE STRING PORT_DESC)
 else(WIN32)
-	set(PORT /dev/ttyACM0)
+	set(PORT /dev/ttyACM0 CACHE STRING PORT_DESC)
 endif(WIN32)
 
 set(SKETCHBOOK .)
