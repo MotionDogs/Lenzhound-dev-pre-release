@@ -47,7 +47,7 @@ void ShowCommands()
   Serial.println(" 1,<max velocity>;      - Set Max Velocity");
   Serial.println(" 2,<acceleration>;      - Set Acceleration");
   Serial.println(" 3,<antenna>;           - Set Antenna (0=integrated; 1=remote)");
-  Serial.println(" 4,<channel>;           - Set Channel Num (0-84)");
+  Serial.println(" 4,<channel>;           - Set Channel Num (1-83)");
   Serial.println(" 5,<PA level>;          - Set Power Amp Level (0=-18; 1=-12; 2=-6; 3=0)[dBm]");
   Serial.println(" 6,<data rate>;         - Set Data Rate (0=.250; 1=1; 2=2)[Mbps]");
   Serial.println("Current values");
@@ -125,7 +125,7 @@ void OnSetChannel()
 {
   // todo: what happens if there is no arg?
   int val = cmdMessenger.readInt16Arg();
-  if (CheckBoundsInclusive(val, 0, 84)) {
+  if (CheckBoundsInclusive(val, 1, 83)) {
     settings.SetChannel(val);
     PrintSuccess(val, "Channel");
   }  
