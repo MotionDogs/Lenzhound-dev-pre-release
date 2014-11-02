@@ -22,25 +22,26 @@
 #include "util.h"
 #include "constants.h"
 #include "macros.h"
-#include "motor.h"
+#include "motorimpl.h"
+#include "motorcontroller.h"
 #include "receiver.h"
 #include "events.h"
 
-
-Motor motor;
+MotorImpl motor;
 Console console;
 Settings settings;
 Receiver receiver;
 
+lh::MotorController motor_controller = lh::MotorController(&motor);
+
 void TimerISR() {
-  motor.Run();
+  motor_controller.Run();
 }
 
 void DirtyCheckSettings() {
   long accel = settings.GetAcceleration();
   long max_velocity = settings.GetMaxVelocity();
-  char microsteps = settings.GetMicrosteps();
-  motor.Configure(accel, max_velocity, microsteps);
+  motor_controller.Configure(accel, max_velocity);
   receiver.ReloadSettings();
 }
  
@@ -70,8 +71,8 @@ void setup() {
  
 void loop() {
   receiver.GetData();
-  motor.set_observed_position(receiver.Position());
-  motor.set_max_velocity(receiver.Velocity());
+  motor_controller.set_observed_position(receiver.Position());
+  motor_controller.set_max_velocity(receiver.Velocity());
   console.Run();
   if (events::dirty()) {
     events::set_dirty(false);

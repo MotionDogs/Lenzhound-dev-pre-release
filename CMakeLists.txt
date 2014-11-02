@@ -1,9 +1,10 @@
 project(lenzhound)
 cmake_minimum_required(VERSION 2.8.7)
 
-include_directories(tools/gtest/include)
+include_directories(tools/gtest/include Rxr/)
 
 add_subdirectory(tools/gtest)
+add_subdirectory(Rxr)
 add_subdirectory(test)
 
 set(BOARD arduino:avr:leonardo)
