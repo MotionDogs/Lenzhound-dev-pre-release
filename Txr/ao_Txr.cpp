@@ -426,12 +426,11 @@ QP::QState Txr::freeRun(Txr * const me, QP::QEvt const * const e) {
     }
     case POSITION_BUTTON_SIG:
     {
-      me->mPrevPositionButtonPressed = ((PositionButtonEvt*)e)->ButtonNum;
-      Q_REQUIRE(me->mPrevPositionButtonPressed < NUM_POSITION_BUTTONS);
-      me->mSavedPositions[me->mPrevPositionButtonPressed] = me->mCurPos;
-      
-      // only flash LED if not already flashing another LED
+      // only save position if finished flashing from previous save
       if (me->mFlashTimeout.ctr() == 0) {
+        me->mPrevPositionButtonPressed = ((PositionButtonEvt*)e)->ButtonNum;
+        Q_REQUIRE(me->mPrevPositionButtonPressed < NUM_POSITION_BUTTONS);
+        me->mSavedPositions[me->mPrevPositionButtonPressed] = me->mCurPos;
         BSP_TurnOnSpeedLED(me->mPrevPositionButtonPressed);
         me->mFlashTimeout.postIn(me, FLASH_RATE_TOUT);
       }
