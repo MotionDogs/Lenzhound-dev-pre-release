@@ -61,6 +61,8 @@ void setup() {
   ENABLE_PIN(CLR);
   ANT_CTRL1(SET);
   ANT_CTRL1(CLR);
+  MS1_PIN(SET);
+  MS2_PIN(SET);
 
   console.Init();
   DirtyCheckSettings();
