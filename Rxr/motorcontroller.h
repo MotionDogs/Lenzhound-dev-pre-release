@@ -3,6 +3,15 @@
 #include "motor.h"
 #include "constants.h"
 
+<<<<<<< HEAD
+enum {
+  FREE_MODE,
+  PLAYBACK_MODE,
+  Z_MODE
+};
+
+=======
+>>>>>>> origin/master
 namespace lh {
 
 class MotorController {
@@ -12,13 +21,23 @@ public:
   void Run();
   void set_observed_position(long position);
   void set_max_velocity(int velocity);
+<<<<<<< HEAD
+  void set_accel(int accel, int mode);
+=======
+>>>>>>> origin/master
 private:
   Motor * motor_;
   bool direction_;
   long max_velocity_;
   long current_velocity_cap_;
   long accel_;
+<<<<<<< HEAD
+  long max_accel_;
   long decel_denominator_;
+  long max_decel_denominator_;
+=======
+  long decel_denominator_;
+>>>>>>> origin/master
   long velocity_;
   long calculated_position_;
   long motor_position_;
@@ -34,4 +53,8 @@ private:
 
 }
 
+<<<<<<< HEAD
 #endif //lenzhound_motor_controller_h
+=======
+#endif //lenzhound_motor_controller_h
+>>>>>>> origin/master
