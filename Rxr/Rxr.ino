@@ -75,6 +75,7 @@ void loop() {
   receiver.GetData();
   motor_controller.set_observed_position(receiver.Position());
   motor_controller.set_max_velocity(receiver.Velocity());
+  motor_controller.set_accel(receiver.Acceleration(), receiver.Mode());
   console.Run();
   if (events::dirty()) {
     events::set_dirty(false);
