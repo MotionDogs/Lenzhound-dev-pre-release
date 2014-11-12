@@ -49,6 +49,8 @@ void MotorController::Configure(
   max_accel_ = max_accel;
   max_velocity_ = max_velocity;
   max_decel_denominator_ = util::FixedMultiply(max_accel_, util::MakeFixed(2L));
+  set_accel(100, FREE_MODE);
+  set_max_velocity(100);
 }
 
 long MotorController::GetDecelerationThreshold() {

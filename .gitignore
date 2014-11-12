@@ -47,3 +47,4 @@ Win32/
 */Debug/
 */Release/
 *.dir
+*.opensdf

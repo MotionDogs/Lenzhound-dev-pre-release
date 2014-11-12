@@ -28,7 +28,6 @@ private:
   long max_accel_;
   long decel_denominator_;
   long max_decel_denominator_;
-  long decel_denominator_;
   long velocity_;
   long calculated_position_;
   long motor_position_;
