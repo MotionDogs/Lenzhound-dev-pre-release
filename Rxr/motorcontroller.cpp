@@ -34,7 +34,6 @@ void MotorController::set_max_velocity(int velocity) {
   current_velocity_cap_ = util::Max(max_velocity_ * velocity * CONVERSION_FACTOR, 1L);
 }
 
-<<<<<<< HEAD
 void MotorController::set_accel(int accel, int mode){
   accel_ = util::Max(max_accel_ * accel * CONVERSION_FACTOR, 1L);
   if(mode==Z_MODE){
@@ -50,13 +49,6 @@ void MotorController::Configure(
   max_accel_ = max_accel;
   max_velocity_ = max_velocity;
   max_decel_denominator_ = util::FixedMultiply(max_accel_, util::MakeFixed(2L));
-=======
-void MotorController::Configure(
-  long accel, long max_velocity) {
-  accel_ = accel;
-  max_velocity_ = max_velocity;
-  decel_denominator_ = util::FixedMultiply(accel_, util::MakeFixed(2L));
->>>>>>> origin/master
 }
 
 long MotorController::GetDecelerationThreshold() {
@@ -133,4 +125,3 @@ void MotorController::Run() {
   }
 }
 
-}
