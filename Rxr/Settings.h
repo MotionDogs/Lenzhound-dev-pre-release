@@ -10,13 +10,14 @@
 #define CHANNEL_LOC       12 // int
 #define PA_LEVEL_LOC      14 // int
 #define DATA_RATE_LOC     16 // int
+#define ZMODE_MAX_VEL_LOC 18 // long
+#define ZMODE_ACCEL_LOC   22 // long
 
 
 class Settings
 {
 public:
   Settings();
-  //todo: this needs to be brought out into an event loop
   void SetMaxVelocity(long val);
   long GetMaxVelocity();
   void SetAcceleration(long val);
@@ -31,6 +32,11 @@ public:
   int GetPALevel();
   void SetDataRate(int val);
   int GetDataRate();
+  void SetZModeMaxVelocity(long val);
+  long GetZModeMaxVelocity();
+  void SetZModeAcceleration(long val);
+  long GetZModeAcceleration();
+  
 
 private:
   // any reason to save the state of the settings?
@@ -38,4 +44,4 @@ private:
 
 };
 
-#endif  // bsp_h
+#endif

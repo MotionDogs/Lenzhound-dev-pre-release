@@ -4,11 +4,9 @@ cmake_minimum_required(VERSION 2.8.7)
 set(CMAKE_CXX_FLAGS_DEBUG "/MTd")
 set(CMAKE_CXX_FLAGS_RELEASE "/MTd")
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
-include_directories(tools/gtest/include)
-
+include_directories(tools/gtest/include Rxr/)
 add_subdirectory(tools/gtest)
-
+add_subdirectory(Rxr)
 add_subdirectory(test)
 
 set(BOARD arduino:avr:leonardo)
@@ -34,12 +32,12 @@ add_custom_target(upload-txr
 	arduino --upload ${OPTS} ${CMAKE_SOURCE_DIR}/Txr/Txr.ino)
 add_custom_target(run-tests
 	./test/test
-	DEPENDS test)
+	DEPENDS tests)
 
 # folders for Visual Studio
 set_target_properties(gtest PROPERTIES FOLDER tools)
 set_target_properties(gtest_main PROPERTIES FOLDER tools)
-set_target_properties(test PROPERTIES FOLDER test)
+set_target_properties(tests PROPERTIES FOLDER test)
 set_target_properties(run-tests PROPERTIES FOLDER test)
 set_target_properties(upload-rxr PROPERTIES FOLDER board-rxr)
 set_target_properties(verify-rxr PROPERTIES FOLDER board-rxr)
