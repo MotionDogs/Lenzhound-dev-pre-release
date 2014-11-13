@@ -371,7 +371,10 @@ QP::QState Txr::flashing(Txr * const me, QP::QEvt const * const e) {
       if (me->mEncPushes >= 2) {
         if (FREESWITCH_ON()) {
           status_ = Q_TRAN(&freeRun);
-        }  
+        } 
+        else if (ZSWITCH_ON()) {
+          status_ = Q_TRAN(&zmode);
+        }
         else {        
           status_ = Q_TRAN(&playBack);
         }        
