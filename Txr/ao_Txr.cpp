@@ -150,14 +150,14 @@ void Txr::UpdateCalibrationMultiplier(int setting)
 {
   switch (setting) {
     case PLAYBACK_MODE:
-      mCalibrationMultiplier = 5;
+      mCalibrationMultiplier = 40;
       break;
     case Z_MODE:
-      mCalibrationMultiplier = 10;
+      mCalibrationMultiplier = 80;
       break;
     case FREE_MODE:
     default:
-      mCalibrationMultiplier = 1;
+      mCalibrationMultiplier = 8;
       break;
   }
 }
