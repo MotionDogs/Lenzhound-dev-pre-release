@@ -39,6 +39,7 @@ Receiver::Receiver() {
   Mirf.payload = sizeof(Packet); // Payload length
   LoadSettings();
   Mirf.config(); // Power up reciver
+  Mirf.powerDown(); // keep powered down for standby mode
 }
 
 void Receiver::LoadSettings()
@@ -75,7 +76,8 @@ void Receiver::ReloadSettings()
 {
   Mirf.powerDown();  // not sure if this is necessary
   LoadSettings();
-  Mirf.config();
+  //Mirf.config();
+  Mirf.powerDown(); // keep powered down for standby mode
 }
 
 void Receiver::GetData() {

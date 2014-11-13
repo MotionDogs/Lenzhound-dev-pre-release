@@ -28,6 +28,7 @@ Radio::Radio(int packetSize) {
   Mirf.payload = packetSize; // Payload length
   LoadSettings();
   Mirf.config(); // Power up reciver
+  Mirf.powerDown(); // keep powered down for standby mode
 }
 
 void Radio::LoadSettings()
@@ -56,11 +57,12 @@ void Radio::ReloadSettings()
 {
   Mirf.powerDown();  // not sure if this is necessary
   LoadSettings();
-  Mirf.config();
+  //Mirf.config();
+  Mirf.powerDown(); // keep powered down for standby mode
 }
 
 void Radio::SendPacket(byte *message) {
-  if (!Mirf.isSending()) {
-    Mirf.send(message);
-  }
+  //if (!Mirf.isSending()) { // removed for standby mode testing
+  //  Mirf.send(message);
+  //}
 }
