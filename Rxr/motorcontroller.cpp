@@ -30,27 +30,36 @@ void MotorController::set_observed_position(long position) {
   observed_position_ = position;
 }
 
-void MotorController::set_max_velocity(int velocity) {
-  current_velocity_cap_ = util::Max(max_velocity_ * velocity * CONVERSION_FACTOR, 1L);
+void MotorController::set_max_velocity(int velocity, int mode) {
+  if(mode==Z_MODE){
+    current_velocity_cap_ = util::Max(z_max_velocity_ * velocity * CONVERSION_FACTOR, 1L);
+  }
+  else{
+    current_velocity_cap_ = util::Max(max_velocity_ * velocity * CONVERSION_FACTOR, 1L);
+  }
 }
 
 void MotorController::set_accel(int accel, int mode){
-  accel_ = util::Max(max_accel_ * accel * CONVERSION_FACTOR, 1L);
   if(mode==Z_MODE){
+    accel_ = util::Max(z_max_accel_ * accel * CONVERSION_FACTOR, 1L);
     decel_denominator_ = util::FixedMultiply(max_accel_, util::MakeFixed(2L));
   }
   else{
+    accel_ = util::Max(max_accel_ * accel * CONVERSION_FACTOR, 1L);
     decel_denominator_ = max_decel_denominator_;
   }
 }
 
 void MotorController::Configure(
-  long max_accel, long max_velocity) {
+  long max_accel, long max_velocity, long z_accel, long z_velocity) {
   max_accel_ = max_accel;
   max_velocity_ = max_velocity;
+  z_max_accel_ = z_accel;
+  z_max_velocity_ = z_velocity;
   max_decel_denominator_ = util::FixedMultiply(max_accel_, util::MakeFixed(2L));
+  
   set_accel(100, FREE_MODE);
-  set_max_velocity(100);
+  set_max_velocity(100, FREE_MODE);
 }
 
 long MotorController::GetDecelerationThreshold() {

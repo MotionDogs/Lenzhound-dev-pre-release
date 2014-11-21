@@ -38,8 +38,8 @@ TEST(MotorController, HitsItsTarget) {
   lh::MotorController controller = lh::MotorController(&mock);
   long target = 5000;
 
-  controller.Configure(50, 6000);
-  controller.set_max_velocity(100);
+  controller.Configure(50, 6000, 50, 6000);
+  controller.set_max_velocity(100, 0);
   controller.set_observed_position(util::MakeFixed(target));
 
   // make sure we don't go over target
@@ -55,8 +55,8 @@ TEST(MotorController, HandlesSlowSpeeds) {
   lh::MotorController controller = lh::MotorController(&mock);
   long target = 300;
 
-  controller.Configure(50, 1);
-  controller.set_max_velocity(100);
+  controller.Configure(50, 1, 50, 1);
+  controller.set_max_velocity(100, 0);
   controller.set_observed_position(util::MakeFixed(target));
 
   // make sure we don't go over target

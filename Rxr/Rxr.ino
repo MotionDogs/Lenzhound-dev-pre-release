@@ -41,7 +41,9 @@ void TimerISR() {
 void DirtyCheckSettings() {
   long accel = settings.GetAcceleration();
   long max_velocity = settings.GetMaxVelocity();
-  motor_controller.Configure(accel, max_velocity);
+  long z_max_velocity = settings.GetZModeMaxVelocity();
+  long z_max_accel = settings.GetZModeAcceleration();
+  motor_controller.Configure(accel, max_velocity, z_max_accel, z_max_velocity);
   receiver.ReloadSettings();
 }
  
@@ -74,7 +76,7 @@ void setup() {
 void loop() {
   receiver.GetData();
   motor_controller.set_observed_position(receiver.Position());
-  motor_controller.set_max_velocity(receiver.Velocity());
+  motor_controller.set_max_velocity(receiver.Velocity(), receiver.Mode());
   motor_controller.set_accel(receiver.Acceleration(), receiver.Mode());
   console.Run();
   if (events::dirty()) {
