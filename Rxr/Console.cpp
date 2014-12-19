@@ -46,14 +46,14 @@ void ShowCommands()
 {
   Serial.println("Available commands");
   Serial.println(" 0;                      - This command list");
-  Serial.println(" 1,<max velocity>;       - Set Max Velocity");
-  Serial.println(" 2,<acceleration>;       - Set Acceleration");
+  Serial.println(" 1,<max velocity>;       - Set Max Velocity (10-48000)");
+  Serial.println(" 2,<acceleration>;       - Set Acceleration (1-32000)");
   Serial.println(" 3,<antenna>;            - Set Antenna (0=integrated; 1=remote)");
-  Serial.println(" 4,<channel>;            - Set Channel Num (1-83)");
+  Serial.println(" 4,<channel>;            - Set Channel Num (1-82)");
   Serial.println(" 5,<PA level>;           - Set Power Amp Level (0=-18; 1=-12; 2=-6; 3=0)[dBm]");
   Serial.println(" 6,<data rate>;          - Set Data Rate (0=.250; 1=1; 2=2)[Mbps]");
-  Serial.println(" 7,<zmode max velocity>; - Set ZMode Max Velocity");
-  Serial.println(" 8,<zmode acceleration>; - Set ZMode Acceleration");
+  Serial.println(" 7,<zmode max velocity>; - Set ZMode Max Velocity (10-48000)");
+  Serial.println(" 8,<zmode acceleration>; - Set ZMode Acceleration (1-32000)");
   Serial.println("Current values");
   OnGetAllValues();
 }
@@ -81,7 +81,7 @@ void OnSetMaxVel()
 {
   // todo: what happens if there is no arg?
   long val = cmdMessenger.readInt32Arg();
-  if (CheckBoundsInclusive(val, 10, 32000)) {
+  if (CheckBoundsInclusive(val, 10, 48000)) {
     settings.SetMaxVelocity(val);
     PrintSuccess(val, "MaxVel");
   }  
@@ -129,7 +129,7 @@ void OnSetChannel()
 {
   // todo: what happens if there is no arg?
   int val = cmdMessenger.readInt16Arg();
-  if (CheckBoundsInclusive(val, 1, 83)) {
+  if (CheckBoundsInclusive(val, 1, 82)) {
     settings.SetChannel(val);
     PrintSuccess(val, "Channel");
   }  
@@ -177,7 +177,7 @@ void OnSetZModeMaxVel()
 {
   // todo: what happens if there is no arg?
   long val = cmdMessenger.readInt32Arg();
-  if (CheckBoundsInclusive(val, 10, 32000)) {
+  if (CheckBoundsInclusive(val, 10, 48000)) {
     settings.SetZModeMaxVelocity(val);
     PrintSuccess(val, "ZMode MaxVel");
   }  
@@ -224,7 +224,7 @@ void OnGetAllValues()
   OnGetZModeAccel();
 }
 
-int CheckBoundsInclusive(int val, int min, int max)
+int CheckBoundsInclusive(long val, long min, long max)
 {
   if (val < min || val > max) {
     Serial.println(ERROR);

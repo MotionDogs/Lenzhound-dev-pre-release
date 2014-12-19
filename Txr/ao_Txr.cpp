@@ -25,7 +25,7 @@ enum TxrTimeouts {
   FLASH_RATE_TOUT = BSP_TICKS_PER_SEC / 2,        // how quick to flash LED
   FLASH_DURATION_TOUT = BSP_TICKS_PER_SEC *2,     // how long to flash LED for
   ENTER_CALIBRATION_TOUT = BSP_TICKS_PER_SEC * 2, // how long to hold calibration button before reentering calibration
-  ALIVE_DURATION_TOUT = BSP_TICKS_PER_SEC / 2     // how long to flash the "I'm Aliave" LED
+  ALIVE_DURATION_TOUT = BSP_TICKS_PER_SEC * 5     // how often to check that transmitter is still powered (in case of low battery)
 };
 
 // todo: move this somewhere else or do differently
@@ -196,7 +196,12 @@ QP::QState Txr::on(Txr * const me, QP::QEvt const * const e) {
     }
     case ALIVE_SIG:
     {
-      GREEN2_LED_TOGGLE();
+      if (BSP_IsRadioAlive()) {
+        GREEN2_LED_OFF();
+      }        
+      else {
+        GREEN2_LED_ON();
+      }
       status_ = Q_HANDLED();
       break;
     }

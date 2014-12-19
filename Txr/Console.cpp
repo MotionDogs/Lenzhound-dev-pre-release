@@ -43,7 +43,7 @@ void ShowCommands()
 {
   Serial.println("Available commands");
   Serial.println(" 0;                     - This command list");
-  Serial.println(" 4,<channel>;           - Set Channel Num (1-83)");
+  Serial.println(" 4,<channel>;           - Set Channel Num (1-82)");
   Serial.println(" 5,<PA level>;          - Set Power Amp Level (0=-18; 1=-12; 2=-6; 3=0)[dBm]");
   Serial.println(" 6,<data rate>;         - Set Data Rate (0=.250; 1=1; 2=2)[Mbps]");
   Serial.println("Current values");
@@ -73,7 +73,7 @@ void OnSetChannel()
 {
   // todo: what happens if there is no arg?
   int val = cmdMessenger.readInt16Arg();
-  if (CheckBoundsInclusive(val, 1, 83)) {
+  if (CheckBoundsInclusive(val, 1, 82)) {
     settings.SetChannel(val);
     PrintSuccess(val, "Channel");
     QF::PUBLISH(Q_NEW(QEvt, UPDATE_PARAMS_SIG), &OnSetChannel);
@@ -134,7 +134,7 @@ void OnGetAllValues()
   OnGetDataRate();
 }
 
-int CheckBoundsInclusive(int val, int min, int max)
+int CheckBoundsInclusive(long val, long min, long max)
 {
   if (val < min || val > max) {
     Serial.println(ERROR);

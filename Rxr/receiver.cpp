@@ -57,7 +57,7 @@ void Receiver::LoadSettings()
     reg[0] |= rates[setting];
   }
   setting = settings.GetChannel();
-  if (setting >= 1 && setting <= 83) {
+  if (setting >= 1 && setting <= 82) {
     Mirf.channel = setting;
   }
   setting = settings.GetAntenna();
