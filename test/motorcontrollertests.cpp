@@ -83,11 +83,11 @@ TEST(MotorController, HandlesSlowSpeeds) {
 TEST(MotorController, DoesNotChangeConcavity) {
   MotorMock mock;
   lh::MotorController controller = lh::MotorController(&mock);
-  long target = 1000;
+  long target = 6000;
 
-  controller.Configure(4, 6000, 4, 6000);
-  controller.set_max_velocity(25, Z_MODE);
-  controller.set_accel(25, Z_MODE);
+  controller.Configure(32, 48000, 32, 48000);
+  controller.set_max_velocity(100, FREE_MODE);
+  controller.set_accel(100, FREE_MODE);
   controller.set_observed_position(util::MakeFixed(target));
 
   mock.set_boundary(target);
@@ -99,10 +99,10 @@ TEST(MotorController, DoesNotChangeConcavity) {
   EXPECT_EQ(target, mock.position());
 
   std::vector<MotorPulse> pulses = mock.pulses();
-  clock_t prev_delta = pulses[1].run_count - pulses[0].run_count;
+  long prev_delta = pulses[1].run_count - pulses[0].run_count;
   bool decel_begun = false;
   for (int i = 2; i < pulses.size(); ++i) {
-    clock_t next_delta = pulses[i].run_count - pulses[i - 1].run_count;
+    long next_delta = pulses[i].run_count - pulses[i - 1].run_count;
     // std::cout << next_delta << "\n"; // can chart using vanilla csv graphing tools
 
     if (!decel_begun) {
