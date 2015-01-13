@@ -31,7 +31,7 @@ add_custom_target(upload-rxr
 add_custom_target(upload-txr
 	arduino --upload ${OPTS} ${CMAKE_SOURCE_DIR}/Txr/Txr.ino)
 add_custom_target(run-tests
-	./test/test
+	./test/tests
 	DEPENDS tests)
 
 # folders for Visual Studio

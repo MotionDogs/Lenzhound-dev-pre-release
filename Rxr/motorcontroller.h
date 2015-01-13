@@ -3,12 +3,6 @@
 #include "motor.h"
 #include "constants.h"
 
-enum {
-  FREE_MODE,
-  PLAYBACK_MODE,
-  Z_MODE
-};
-
 namespace lh {
 
 class MotorController {

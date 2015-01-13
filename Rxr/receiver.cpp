@@ -7,12 +7,7 @@
 #include "macros.h"
 #include "receiver.h"
 #include "util.h"
-
-enum {
-  FREE_MODE,
-  PLAYBACK_MODE,
-  Z_MODE
-};
+#include "constants.h"
 
 #define MAX_VELOCITY 100
 #define MAX_ACCELERATION 100

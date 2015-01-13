@@ -12,4 +12,10 @@ const long kPeriod                = kSecondsInMicroseconds/kIsrFrequency;
 // Motor constants
 const long kSleepThreshold        = kIsrFrequency * 5; // five seconds
 
+enum {
+  FREE_MODE,
+  PLAYBACK_MODE,
+  Z_MODE
+};
+
 #endif // lenzhound_constants_h

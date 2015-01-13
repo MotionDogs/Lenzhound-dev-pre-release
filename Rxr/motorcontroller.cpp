@@ -42,11 +42,11 @@ void MotorController::set_max_velocity(int velocity, int mode) {
 void MotorController::set_accel(int accel, int mode){
   if(mode==Z_MODE){
     accel_ = util::Max(z_max_accel_ * accel * CONVERSION_FACTOR, 1L);
-    decel_denominator_ = util::FixedMultiply(max_accel_, util::MakeFixed(2L));
+    decel_denominator_ = util::FixedMultiply(accel_, util::MakeFixed(2L));
   }
   else{
     accel_ = util::Max(max_accel_ * accel * CONVERSION_FACTOR, 1L);
-    decel_denominator_ = max_decel_denominator_;
+    decel_denominator_ = util::FixedMultiply(accel_, util::MakeFixed(2L));
   }
 }
 
