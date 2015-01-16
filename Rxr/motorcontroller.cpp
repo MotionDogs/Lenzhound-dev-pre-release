@@ -31,7 +31,7 @@ void MotorController::set_observed_position(long position) {
 }
 
 void MotorController::set_max_velocity(int velocity, int mode) {
-  int max = mode==Z_MODE ? z_max_velocity_ : max_velocity_;
+  long max = (mode == Z_MODE) ? z_max_velocity_ : max_velocity_;
   current_velocity_cap_ = util::Min(
     util::Max(max * velocity * CONVERSION_FACTOR, 1L),
     util::kFixedOne);
