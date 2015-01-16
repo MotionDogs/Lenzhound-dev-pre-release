@@ -16,7 +16,6 @@ public:
   int GetChannel();
   void SetPALevel(int val);
   int GetPALevel();
-  void SetDataRate(int val);
   int GetDataRate();
 
 private:

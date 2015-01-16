@@ -84,17 +84,9 @@ int Settings::GetPALevel()
   return val;
 }
 
-void Settings::SetDataRate(int val)
-{
-  eeprom::WriteInt16(DATA_RATE_LOC, val); 
-  events::set_dirty(true);
-}
-
 int Settings::GetDataRate()
 {
-  int val;
-  eeprom::ReadInt16(DATA_RATE_LOC, &val);
-  return val;
+  return 0;
 }
 
 void Settings::SetZModeMaxVelocity(long val)

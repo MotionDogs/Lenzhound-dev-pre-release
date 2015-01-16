@@ -11,15 +11,14 @@ static const char ERROR[] = "ERROR";
 // In order to receive, attach a callback function to these events
 enum
 {
-  COMMAND_LIST, 
-  SET_MAX_VEL, 
-  SET_ACCEL,
-  SET_ANTENNA,
-  SET_CHANNEL,
-  SET_PALEVEL,
-  SET_DATARATE,
-  SET_ZMODE_MAX_VEL,
-  SET_ZMODE_ACCEL,
+  COMMAND_LIST = 0, 
+  SET_MAX_VEL = 1, 
+  SET_ACCEL = 2,
+  SET_ANTENNA = 3,
+  SET_CHANNEL = 4,
+  SET_PALEVEL = 5,
+  SET_ZMODE_MAX_VEL = 7,
+  SET_ZMODE_ACCEL = 8,
 };
 
 Console::Console()
@@ -51,7 +50,6 @@ void ShowCommands()
   Serial.println(" 3,<antenna>;            - Set Antenna (0=integrated; 1=remote)");
   Serial.println(" 4,<channel>;            - Set Channel Num (1-82)");
   Serial.println(" 5,<PA level>;           - Set Power Amp Level (0=-18; 1=-12; 2=-6; 3=0)[dBm]");
-  Serial.println(" 6,<data rate>;          - Set Data Rate (0=.250; 1=1; 2=2)[Mbps]");
   Serial.println(" 7,<zmode max velocity>; - Set ZMode Max Velocity (10-48000)");
   Serial.println(" 8,<zmode acceleration>; - Set ZMode Acceleration (1-32000)");
   Serial.println("Current values");
@@ -157,22 +155,6 @@ void OnGetPALevel()
   Serial.println(settings.GetPALevel());
 }
 
-void OnSetDataRate()
-{
-  // todo: what happens if there is no arg?
-  int val = cmdMessenger.readInt16Arg();
-  if (CheckBoundsInclusive(val, 0, 2)) {
-    settings.SetDataRate(val);
-    PrintSuccess(val, "Data Rate");
-  }    
-}
-
-void OnGetDataRate()
-{
-  Serial.print(" Data Rate: ");
-  Serial.println(settings.GetDataRate());
-}
-
 void OnSetZModeMaxVel()
 {
   // todo: what happens if there is no arg?
@@ -219,7 +201,6 @@ void OnGetAllValues()
   OnGetAntenna();
   OnGetChannel();
   OnGetPALevel();
-  OnGetDataRate();
   OnGetZModeMaxVel();
   OnGetZModeAccel();
 }
@@ -244,11 +225,6 @@ void Console::AttachCommandCallbacks()
   cmdMessenger.attach(SET_ANTENNA, OnSetAntenna);
   cmdMessenger.attach(SET_CHANNEL, OnSetChannel);
   cmdMessenger.attach(SET_PALEVEL, OnSetPALevel);
-  cmdMessenger.attach(SET_DATARATE, OnSetDataRate);
   cmdMessenger.attach(SET_ZMODE_MAX_VEL, OnSetZModeMaxVel);
   cmdMessenger.attach(SET_ZMODE_ACCEL, OnSetZModeAccel);
 }
-
-
-
-

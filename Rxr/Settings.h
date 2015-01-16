@@ -9,7 +9,6 @@
 #define ANTENNA_LOC       10 // int
 #define CHANNEL_LOC       12 // int
 #define PA_LEVEL_LOC      14 // int
-#define DATA_RATE_LOC     16 // int
 #define ZMODE_MAX_VEL_LOC 18 // long
 #define ZMODE_ACCEL_LOC   22 // long
 
@@ -30,7 +29,6 @@ public:
   int GetChannel();
   void SetPALevel(int val);
   int GetPALevel();
-  void SetDataRate(int val);
   int GetDataRate();
   void SetZModeMaxVelocity(long val);
   long GetZModeMaxVelocity();

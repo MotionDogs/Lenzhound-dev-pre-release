@@ -36,8 +36,6 @@ void OnSetChannel();
 void OnGetChannel();
 void OnSetPALevel();
 void OnGetPALevel();
-void OnSetDataRate();
-void OnGetDataRate();
 void OnSetZModeMaxVel();
 void OnGetZModeMaxVel();
 void OnSetZModeAccel();
