@@ -7,6 +7,7 @@
 // pin macros
 #define CLR(x,y)            ( PORT ## x&=(~(1<<y)) )
 #define SET(x,y)            ( PORT ## x|=(1<<y) )
+#define _BV(bit)            ( 1 << (bit) )
 #define IN(x,y)             ( DDR ## x&=(~(1<<y)) )
 #define OUT(x,y)            ( DDR ## x|=(1<<y) )
 #define SET_MODE(pin,mode)  ( pin(mode) )

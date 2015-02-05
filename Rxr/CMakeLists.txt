@@ -1,1 +1,0 @@
-add_library(lenzhound_core motorcontroller.cpp)
