@@ -106,6 +106,10 @@ void Motor::WakeUp() {
 }
 
 bool Motor::TrySleep() {
+  if (motor_position_ != observed_position_) {
+    run_count_ = 0;
+    return false;
+  }
   if (sleeping_) {
     return true;
   }
@@ -129,7 +133,11 @@ void Motor::Run() {
     } else if (calculated_position_ < observed_position_) {
       velocity_ = util::Min(velocity_+accel_, current_velocity_cap_);
     }
-    calculated_position_ += velocity_;
+    if (velocity_ < decel_) {
+      calculated_position_ = observed_position_;
+    } else {
+      calculated_position_ += velocity_;
+    }
     if((motor_position_ < calculated_position_) &&
       (motor_position_ != observed_position_)) {
       motor_position_ += util::kFixedOne;
@@ -144,7 +152,11 @@ void Motor::Run() {
     } else if (calculated_position_ > observed_position_) {
       velocity_ = util::Max(velocity_-accel_, -current_velocity_cap_);
     }
-    calculated_position_ += velocity_;
+    if (-velocity_ < decel_) {
+      calculated_position_ = observed_position_;
+    } else {
+      calculated_position_ += velocity_;
+    }
     if(motor_position_ > calculated_position_ &&
       motor_position_ != observed_position_) {
       motor_position_ -= util::kFixedOne;

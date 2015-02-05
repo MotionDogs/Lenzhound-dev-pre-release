@@ -1,7 +1,4 @@
 //****************************************************************************
-// Version 0.1.8
-// 9/29/2014
-//
 // This program is open source software: you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as published
 // by the Free Software Foundation.
@@ -28,6 +25,7 @@
 #include "motor.h"
 #include "receiver.h"
 #include "events.h"
+
 
 Motor motor;
 Console console;

@@ -74,6 +74,7 @@ protected:
   void UpdatePosition(Txr *const me);
   void UpdatePositionCalibration(Txr *const me);  
   void UpdatePositionPlayBack(Txr *const me);  
+  void UpdateCalibrationMultiplier(int setting);
 };
 
 
@@ -120,6 +121,22 @@ void Txr::UpdatePositionPlayBack(Txr *const me)
   me->mPacket.velocity = me->mVelocityManager.GetVelocityPercent();
   me->mVelocityManager.SetLEDs();
   BSP_UpdateRxProxy(me->mPacket);
+}
+
+void Txr::UpdateCalibrationMultiplier(int setting)
+{
+  switch (setting) {
+    case PLAYBACK_MODE:
+      mCalibrationMultiplier = 40;
+      break;
+    case Z_MODE:
+      mCalibrationMultiplier = 80;
+      break;
+    case FREE_MODE:
+    default:
+      mCalibrationMultiplier = 8;
+      break;
+  }
 }
 
 QP::QState Txr::initial(Txr * const me, QP::QEvt const * const e) {
@@ -181,6 +198,7 @@ QP::QState Txr::uncalibrated(Txr * const me, QP::QEvt const * const e) {
       ENC_RED_LED_ON();
       ENC_GREEN_LED_OFF();
       me->mPacket.mode = FREE_MODE;
+      me->UpdateCalibrationMultiplier(BSP_GetMode());
       status_ = Q_HANDLED();
       break;
     }
@@ -211,19 +229,19 @@ QP::QState Txr::uncalibrated(Txr * const me, QP::QEvt const * const e) {
     }
     case PLAY_MODE_SIG: 
     {
-      me->mCalibrationMultiplier = 40;
+      me->UpdateCalibrationMultiplier(PLAYBACK_MODE);
       status_ = Q_HANDLED(); 
       break;
     }
     case Z_MODE_SIG: 
     {
-      me->mCalibrationMultiplier = 80;
+      me->UpdateCalibrationMultiplier(Z_MODE);
       status_ = Q_HANDLED(); 
       break;
     }
     case FREE_MODE_SIG: 
     {
-      me->mCalibrationMultiplier = 8;
+      me->UpdateCalibrationMultiplier(FREE_MODE);
       status_ = Q_HANDLED(); 
       break;
     }
