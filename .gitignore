@@ -31,8 +31,20 @@
 *.app
 
 # CMake generated files
+# (for make)
 CMakeCache.txt
 CMakeFiles
 Makefile
 cmake_install.cmake
 install_manifest.txt
+
+# (for visual studio)
+*.vcxproj*
+*.sln
+Win32/
+*.sdf
+*.suo
+*/Debug/
+*/Release/
+*.dir
+*.opensdf

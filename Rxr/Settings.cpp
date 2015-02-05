@@ -84,15 +84,33 @@ int Settings::GetPALevel()
   return val;
 }
 
-void Settings::SetDataRate(int val)
+int Settings::GetDataRate()
 {
-  eeprom::WriteInt16(DATA_RATE_LOC, val); 
+  return 0;
+}
+
+void Settings::SetZModeMaxVelocity(long val)
+{
+  eeprom::WriteInt32(ZMODE_MAX_VEL_LOC, val); 
   events::set_dirty(true);
 }
 
-int Settings::GetDataRate()
+long Settings::GetZModeMaxVelocity()
 {
-  int val;
-  eeprom::ReadInt16(DATA_RATE_LOC, &val);
+  long val;
+  eeprom::ReadInt32(ZMODE_MAX_VEL_LOC, &val);
+  return val;
+}
+
+void Settings::SetZModeAcceleration(long val)
+{
+  eeprom::WriteInt32(ZMODE_ACCEL_LOC, val); 
+  events::set_dirty(true);
+}
+
+long Settings::GetZModeAcceleration()
+{
+  long val;
+  eeprom::ReadInt32(ZMODE_ACCEL_LOC, &val);
   return val;
 }

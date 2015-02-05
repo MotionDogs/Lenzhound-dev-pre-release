@@ -1,2 +1,3 @@
-add_executable(test test.cpp)
-target_link_libraries(test gtest_main)
+add_executable(tests 
+	motorcontrollertests.cpp)
+target_link_libraries(tests gtest_main lenzhound_core)
