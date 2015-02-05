@@ -38,79 +38,22 @@ void Settings::SetMicrosteps(int val)
   events::set_dirty(true);
 }
 
-int Settings::GetMicrosteps()
+char Settings::GetMicrosteps()
 {
   int val;
   eeprom::ReadInt16(MICROSTEPS_LOC, &val);
-  return val;
+  return (char)val;
 }
 
-void Settings::SetAntenna(int val)
+void Settings::SetAntenna(char val)
 {
-  eeprom::WriteInt16(ANTENNA_LOC, val); 
+  eeprom::WriteChar(ANTENNA_LOC, val); 
   events::set_dirty(true);
 }
 
-int Settings::GetAntenna()
+char Settings::GetAntenna()
 {
-  int val;
-  eeprom::ReadInt16(ANTENNA_LOC, &val);
-  return val;
-}
-
-void Settings::SetChannel(int val)
-{
-  eeprom::WriteInt16(CHANNEL_LOC, val); 
-  events::set_dirty(true);
-}
-
-int Settings::GetChannel()
-{
-  int val;
-  eeprom::ReadInt16(CHANNEL_LOC, &val);
-  return val;
-}
-
-void Settings::SetPALevel(int val)
-{
-  eeprom::WriteInt16(PA_LEVEL_LOC, val); 
-  events::set_dirty(true);
-}
-
-int Settings::GetPALevel()
-{
-  int val;
-  eeprom::ReadInt16(PA_LEVEL_LOC, &val);
-  return val;
-}
-
-int Settings::GetDataRate()
-{
-  return 0;
-}
-
-void Settings::SetZModeMaxVelocity(long val)
-{
-  eeprom::WriteInt32(ZMODE_MAX_VEL_LOC, val); 
-  events::set_dirty(true);
-}
-
-long Settings::GetZModeMaxVelocity()
-{
-  long val;
-  eeprom::ReadInt32(ZMODE_MAX_VEL_LOC, &val);
-  return val;
-}
-
-void Settings::SetZModeAcceleration(long val)
-{
-  eeprom::WriteInt32(ZMODE_ACCEL_LOC, val); 
-  events::set_dirty(true);
-}
-
-long Settings::GetZModeAcceleration()
-{
-  long val;
-  eeprom::ReadInt32(ZMODE_ACCEL_LOC, &val);
+  char val;
+  eeprom::ReadChar(ANTENNA_LOC, &val);
   return val;
 }

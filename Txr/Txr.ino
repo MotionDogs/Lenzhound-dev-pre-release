@@ -1,4 +1,7 @@
 //****************************************************************************
+// Version 0.1.5?  // not sure where we are on version numbers
+// 9/24/2014
+//
 // This program is open source software: you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as published
 // by the Free Software Foundation.
@@ -8,7 +11,7 @@
 // or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
 // for more details.
 //****************************************************************************
-
+//${.::pelican.ino} ..........................................................
 #include "qp_port.h"
 #include "Txr.h"
 #include "bsp.h"
@@ -18,12 +21,12 @@
 #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
 #include "Arduino.h"
-#include <CmdMessenger.h>
-#include <EEPROM.h>
+//#include "EncVelManager.h"
 
 
 // Local-scope objects -------------------------------------------------------
 static QEvt const *txrQueueSto[10];
+static QEvt const *blinkyQueueSto[10]; // alocate event queue buffer
 static QSubscrList subscrSto[MAX_PUB_SIG];
 
 static QF_MPOOL_EL(PositionButtonEvt) smlPoolSto[10]; // storage for the small event pool
@@ -45,6 +48,7 @@ void setup() {
 
   // start the active objects...
   AO_Txr->start(1U, txrQueueSto, Q_DIM(txrQueueSto), (void *)0, 0U);
+  AO_Blinky->start(2U, blinkyQueueSto, Q_DIM(blinkyQueueSto), (void *)0, 0U);
 }
 
 //////////////////////////////////////////////////////////////////////////////

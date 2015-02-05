@@ -1,5 +1,5 @@
-#ifndef lenzhound_util_h
-#define lenzhound_util_h
+#ifndef rxr_util_h
+#define rxr_util_h
 #include "constants.h"
 
 namespace util {
@@ -30,4 +30,4 @@ inline long FixedDivide(long a, long b) {
 const long kFixedOne = MakeFixed(1L);
 }
 
-#endif // lenzhound_util_h
+#endif // rxr_util_h

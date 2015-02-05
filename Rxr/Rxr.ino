@@ -1,14 +1,3 @@
-//****************************************************************************
-// This program is open source software: you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as published
-// by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful, but
-// WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-// or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
-// for more details.
-//****************************************************************************
-
 #include <SPI.h>
 #include <Mirf.h>
 #include <MirfHardwareSpiDriver.h>
@@ -22,29 +11,24 @@
 #include "util.h"
 #include "constants.h"
 #include "macros.h"
-#include "motorimpl.h"
-#include "motorcontroller.h"
+#include "motor.h"
 #include "receiver.h"
 #include "events.h"
 
-MotorImpl motor;
+Motor motor;
 Console console;
 Settings settings;
 Receiver receiver;
 
-lh::MotorController motor_controller = lh::MotorController(&motor);
-
 void TimerISR() {
-  motor_controller.Run();
+  motor.Run();
 }
 
 void DirtyCheckSettings() {
   long accel = settings.GetAcceleration();
   long max_velocity = settings.GetMaxVelocity();
-  long z_max_velocity = settings.GetZModeMaxVelocity();
-  long z_max_accel = settings.GetZModeAcceleration();
-  motor_controller.Configure(accel, max_velocity, z_max_accel, z_max_velocity);
-  receiver.ReloadSettings();
+  char microsteps = settings.GetMicrosteps();
+  motor.Configure(accel, max_velocity, microsteps);
 }
  
 void setup() {
@@ -63,8 +47,6 @@ void setup() {
   ENABLE_PIN(CLR);
   ANT_CTRL1(SET);
   ANT_CTRL1(CLR);
-  MS1_PIN(SET);
-  MS2_PIN(SET);
 
   console.Init();
   DirtyCheckSettings();
@@ -74,10 +56,7 @@ void setup() {
 }
  
 void loop() {
-  receiver.GetData();
-  motor_controller.set_observed_position(receiver.Position());
-  motor_controller.set_max_velocity(receiver.Velocity(), receiver.Mode());
-  motor_controller.set_accel(receiver.Acceleration(), receiver.Mode());
+  motor.set_observed_position(receiver.Position());
   console.Run();
   if (events::dirty()) {
     events::set_dirty(false);
