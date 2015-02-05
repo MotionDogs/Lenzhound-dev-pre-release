@@ -96,42 +96,42 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
-test/CMakeFiles/test.dir/rule:
-	cd /home/doug/lenzhound && $(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/test.dir/rule
-.PHONY : test/CMakeFiles/test.dir/rule
+test/CMakeFiles/tests.dir/rule:
+	cd /home/doug/lenzhound && $(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/tests.dir/rule
+.PHONY : test/CMakeFiles/tests.dir/rule
 
 # Convenience name for target.
-test: test/CMakeFiles/test.dir/rule
-.PHONY : test
+tests: test/CMakeFiles/tests.dir/rule
+.PHONY : tests
 
 # fast build rule for target.
-test/fast:
-	cd /home/doug/lenzhound && $(MAKE) -f test/CMakeFiles/test.dir/build.make test/CMakeFiles/test.dir/build
-.PHONY : test/fast
+tests/fast:
+	cd /home/doug/lenzhound && $(MAKE) -f test/CMakeFiles/tests.dir/build.make test/CMakeFiles/tests.dir/build
+.PHONY : tests/fast
 
-test.o: test.cpp.o
-.PHONY : test.o
+motorcontrollertests.o: motorcontrollertests.cpp.o
+.PHONY : motorcontrollertests.o
 
 # target to build an object file
-test.cpp.o:
-	cd /home/doug/lenzhound && $(MAKE) -f test/CMakeFiles/test.dir/build.make test/CMakeFiles/test.dir/test.cpp.o
-.PHONY : test.cpp.o
+motorcontrollertests.cpp.o:
+	cd /home/doug/lenzhound && $(MAKE) -f test/CMakeFiles/tests.dir/build.make test/CMakeFiles/tests.dir/motorcontrollertests.cpp.o
+.PHONY : motorcontrollertests.cpp.o
 
-test.i: test.cpp.i
-.PHONY : test.i
+motorcontrollertests.i: motorcontrollertests.cpp.i
+.PHONY : motorcontrollertests.i
 
 # target to preprocess a source file
-test.cpp.i:
-	cd /home/doug/lenzhound && $(MAKE) -f test/CMakeFiles/test.dir/build.make test/CMakeFiles/test.dir/test.cpp.i
-.PHONY : test.cpp.i
+motorcontrollertests.cpp.i:
+	cd /home/doug/lenzhound && $(MAKE) -f test/CMakeFiles/tests.dir/build.make test/CMakeFiles/tests.dir/motorcontrollertests.cpp.i
+.PHONY : motorcontrollertests.cpp.i
 
-test.s: test.cpp.s
-.PHONY : test.s
+motorcontrollertests.s: motorcontrollertests.cpp.s
+.PHONY : motorcontrollertests.s
 
 # target to generate assembly for a file
-test.cpp.s:
-	cd /home/doug/lenzhound && $(MAKE) -f test/CMakeFiles/test.dir/build.make test/CMakeFiles/test.dir/test.cpp.s
-.PHONY : test.cpp.s
+motorcontrollertests.cpp.s:
+	cd /home/doug/lenzhound && $(MAKE) -f test/CMakeFiles/tests.dir/build.make test/CMakeFiles/tests.dir/motorcontrollertests.cpp.s
+.PHONY : motorcontrollertests.cpp.s
 
 # Help Target
 help:
@@ -141,10 +141,10 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... test"
-	@echo "... test.o"
-	@echo "... test.i"
-	@echo "... test.s"
+	@echo "... tests"
+	@echo "... motorcontrollertests.o"
+	@echo "... motorcontrollertests.i"
+	@echo "... motorcontrollertests.s"
 .PHONY : help
 
 
