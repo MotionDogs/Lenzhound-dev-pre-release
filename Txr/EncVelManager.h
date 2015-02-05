@@ -11,9 +11,9 @@ protected:
   int mPrevVelocityPercent;
 
 public:
-  void Init();
+  void Init(int startPercentage);
   int GetVelocityPercent();
-  void SetLEDs();
+  void SetLEDs(char force);
   void SetAllLEDsOff();
 };
 
