@@ -96,29 +96,3 @@ int Settings::GetDataRate()
   eeprom::ReadInt16(DATA_RATE_LOC, &val);
   return val;
 }
-
-void Settings::SetZModeMaxVelocity(long val)
-{
-  eeprom::WriteInt32(ZMODE_MAX_VEL_LOC, val); 
-  events::set_dirty(true);
-}
-
-long Settings::GetZModeMaxVelocity()
-{
-  long val;
-  eeprom::ReadInt32(ZMODE_MAX_VEL_LOC, &val);
-  return val;
-}
-
-void Settings::SetZModeAcceleration(long val)
-{
-  eeprom::WriteInt32(ZMODE_ACCEL_LOC, val); 
-  events::set_dirty(true);
-}
-
-long Settings::GetZModeAcceleration()
-{
-  long val;
-  eeprom::ReadInt32(ZMODE_ACCEL_LOC, &val);
-  return val;
-}

@@ -15,13 +15,12 @@
 #define ENC_CNTS_TO_VEL_PERCENT  2
 
 
-void EncVelManager::Init(int startPercentage)
+void EncVelManager::Init()
 {
   // start at mid-speed
-  mVelocityPercent = startPercentage;
-  mPrevVelocityPercent = startPercentage;
+  mVelocityPercent = 50;
+  mPrevVelocityPercent = 50;
   mPrevEncPos = BSP_GetEncoder();
-  SetLEDs(true);
 }
 
 int EncVelManager::GetVelocityPercent()
@@ -35,17 +34,16 @@ int EncVelManager::GetVelocityPercent()
   return mVelocityPercent;
 }
 
-void EncVelManager::SetLEDs(char force)
+void EncVelManager::SetLEDs()
 {
   // if it hasn't changed exit immediately
-  if (mVelocityPercent == mPrevVelocityPercent && !force) {
+  if (mVelocityPercent == mPrevVelocityPercent) {
     return;
   }
   // if we've left one of the boundaries, turn off boundary lights
   else if (mPrevVelocityPercent == MIN_VELOCITY || 
            mPrevVelocityPercent == MAX_VELOCITY ||
-           mPrevVelocityPercent == MID_VELOCITY ||
-           force) {
+           mPrevVelocityPercent == MID_VELOCITY) {
     RED_LED_OFF();
     GREEN_LED_OFF();
     ENC_GREEN_LED_OFF();

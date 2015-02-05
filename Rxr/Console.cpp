@@ -18,8 +18,6 @@ enum
   SET_CHANNEL,
   SET_PALEVEL,
   SET_DATARATE,
-  SET_ZMODE_MAX_VEL,
-  SET_ZMODE_ACCEL,
 };
 
 Console::Console()
@@ -45,15 +43,13 @@ void Console::Run()
 void ShowCommands() 
 {
   Serial.println("Available commands");
-  Serial.println(" 0;                      - This command list");
-  Serial.println(" 1,<max velocity>;       - Set Max Velocity");
-  Serial.println(" 2,<acceleration>;       - Set Acceleration");
-  Serial.println(" 3,<antenna>;            - Set Antenna (0=integrated; 1=remote)");
-  Serial.println(" 4,<channel>;            - Set Channel Num (1-83)");
-  Serial.println(" 5,<PA level>;           - Set Power Amp Level (0=-18; 1=-12; 2=-6; 3=0)[dBm]");
-  Serial.println(" 6,<data rate>;          - Set Data Rate (0=.250; 1=1; 2=2)[Mbps]");
-  Serial.println(" 7,<zmode max velocity>; - Set ZMode Max Velocity");
-  Serial.println(" 8,<zmode acceleration>; - Set ZMode Acceleration");
+  Serial.println(" 0;                     - This command list");
+  Serial.println(" 1,<max velocity>;      - Set Max Velocity");
+  Serial.println(" 2,<acceleration>;      - Set Acceleration");
+  Serial.println(" 3,<antenna>;           - Set Antenna (0=integrated; 1=remote)");
+  Serial.println(" 4,<channel>;           - Set Channel Num (0-84)");
+  Serial.println(" 5,<PA level>;          - Set Power Amp Level (0=-18; 1=-12; 2=-6; 3=0)[dBm]");
+  Serial.println(" 6,<data rate>;         - Set Data Rate (0=.250; 1=1; 2=2)[Mbps]");
   Serial.println("Current values");
   OnGetAllValues();
 }
@@ -129,7 +125,7 @@ void OnSetChannel()
 {
   // todo: what happens if there is no arg?
   int val = cmdMessenger.readInt16Arg();
-  if (CheckBoundsInclusive(val, 1, 83)) {
+  if (CheckBoundsInclusive(val, 0, 84)) {
     settings.SetChannel(val);
     PrintSuccess(val, "Channel");
   }  
@@ -173,38 +169,6 @@ void OnGetDataRate()
   Serial.println(settings.GetDataRate());
 }
 
-void OnSetZModeMaxVel()
-{
-  // todo: what happens if there is no arg?
-  long val = cmdMessenger.readInt32Arg();
-  if (CheckBoundsInclusive(val, 10, 32000)) {
-    settings.SetZModeMaxVelocity(val);
-    PrintSuccess(val, "ZMode MaxVel");
-  }  
-}
-
-void OnGetZModeMaxVel()
-{
-  Serial.print(" ZMode Max Vel: ");
-  Serial.println(settings.GetZModeMaxVelocity());
-}
-
-void OnSetZModeAccel()
-{
-  // todo: what happens if there is no arg?
-  long val = cmdMessenger.readInt32Arg();
-  if (CheckBoundsInclusive(val, 1, 32000)) {
-    settings.SetZModeAcceleration(val);
-    PrintSuccess(val, "ZMode Accel");
-  }  
-}
-
-void OnGetZModeAccel()
-{
-  Serial.print(" ZMode Accel: ");
-  Serial.println(settings.GetZModeAcceleration());
-}
-
 // Callback function that shows a list of commands
 void OnCommandList()
 {
@@ -220,8 +184,6 @@ void OnGetAllValues()
   OnGetChannel();
   OnGetPALevel();
   OnGetDataRate();
-  OnGetZModeMaxVel();
-  OnGetZModeAccel();
 }
 
 int CheckBoundsInclusive(int val, int min, int max)
@@ -245,8 +207,6 @@ void Console::AttachCommandCallbacks()
   cmdMessenger.attach(SET_CHANNEL, OnSetChannel);
   cmdMessenger.attach(SET_PALEVEL, OnSetPALevel);
   cmdMessenger.attach(SET_DATARATE, OnSetDataRate);
-  cmdMessenger.attach(SET_ZMODE_MAX_VEL, OnSetZModeMaxVel);
-  cmdMessenger.attach(SET_ZMODE_ACCEL, OnSetZModeAccel);
 }
 
 

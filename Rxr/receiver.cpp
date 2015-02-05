@@ -8,14 +8,9 @@
 #include "receiver.h"
 #include "util.h"
 
-enum {
-  FREE_MODE,
-  PLAYBACK_MODE,
-  Z_MODE
-};
 
+#define PLAYBACK_MODE 1
 #define MAX_VELOCITY 100
-#define MAX_ACCELERATION 100
 
 #define RATE_MASK     0b00101000
 #define RATE_250KB    0b00100000
@@ -57,7 +52,7 @@ void Receiver::LoadSettings()
     reg[0] |= rates[setting];
   }
   setting = settings.GetChannel();
-  if (setting >= 1 && setting <= 83) {
+  if (setting >= 0 && setting <= 84) {
     Mirf.channel = setting;
   }
   setting = settings.GetAntenna();
@@ -90,15 +85,9 @@ long Receiver::Position(){
 }
 
 int Receiver::Velocity() {
-  if(packet_.mode==PLAYBACK_MODE || packet_.mode==Z_MODE)
+  if(packet_.mode==PLAYBACK_MODE)
     return packet_.velocity;
   return MAX_VELOCITY;
-}
-
-int Receiver::Acceleration() {
-  if(packet_.mode==Z_MODE)
-    return packet_.acceleration;
-  return MAX_ACCELERATION;
 }
 
 int Receiver::Mode(){

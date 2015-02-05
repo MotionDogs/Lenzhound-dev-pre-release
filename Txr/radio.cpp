@@ -46,7 +46,7 @@ void Radio::LoadSettings()
     reg[0] |= rates[setting];
   }    
   setting = settings.GetChannel();
-  if (setting >= 1 && setting <= 83) {
+  if (setting >= 0 && setting <= 84) {
     Mirf.channel = setting;
   }  
   Mirf.writeRegister(RF_SETUP, (byte *)reg, 1);

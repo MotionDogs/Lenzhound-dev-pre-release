@@ -5,7 +5,7 @@
 
 // this shouldn't go here, but it's late and I'm tired
 // and Console IS the only place it's referenced
-#define CURRENT_VERSION "0.1.11"
+#define CURRENT_VERSION "0.1.10"
 
 class String;
 
@@ -38,10 +38,6 @@ void OnSetPALevel();
 void OnGetPALevel();
 void OnSetDataRate();
 void OnGetDataRate();
-void OnSetZModeMaxVel();
-void OnGetZModeMaxVel();
-void OnSetZModeAccel();
-void OnGetZModeAccel();
 void OnGetAllValues();
 int CheckBoundsInclusive(int val, int min, int max);
 void PrintSuccess(long val, String param);
