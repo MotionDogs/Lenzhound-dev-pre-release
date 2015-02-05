@@ -81,10 +81,9 @@ enum {
   
 struct Packet {
   Packet() 
-  : position(0), velocity(0), acceleration(0), mode(0) {}
+  : position(0), velocity(0), mode(0) {}
   long position;
   char velocity;
-  char acceleration;
   char mode;
 };
 
@@ -99,7 +98,6 @@ int  BSP_GetMode();
 void BSP_TurnOnSpeedLED(char num);
 void BSP_TurnOffSpeedLED(char num);
 void BSP_UpdateRadioParams();
-int BSP_IsRadioAlive();
 
 /////////////////////////////////////////////////////////////////////
 // NOTE: The CPU clock frequency F_CPU is defined externally for each

@@ -21,8 +21,7 @@
 const char rates[] =  { 0b00100000, 0b00000000, 0b00001000 };
 const char levels[] = { 0b00000000, 0b00000010, 0b00000100, 0b00000011 };
 
-Radio::Radio(int packetSize)
-{
+Radio::Radio(int packetSize) {
   Mirf.spi = &MirfHardwareSpi; 
   Mirf.init(); // Setup pins / SPI
   Mirf.setTADDR((byte *)"serv1");
@@ -47,7 +46,7 @@ void Radio::LoadSettings()
     reg[0] |= rates[setting];
   }    
   setting = settings.GetChannel();
-  if (setting >= 1 && setting <= 82) {
+  if (setting >= 0 && setting <= 84) {
     Mirf.channel = setting;
   }  
   Mirf.writeRegister(RF_SETUP, (byte *)reg, 1);
@@ -60,17 +59,8 @@ void Radio::ReloadSettings()
   Mirf.config();
 }
 
-void Radio::SendPacket(byte *message) 
-{
+void Radio::SendPacket(byte *message) {
   if (!Mirf.isSending()) {
     Mirf.send(message);
   }
 }
-
-int Radio::IsAlive()
-{
-  uint8_t addr[mirf_ADDR_LEN];
-  uint8_t orig[mirf_ADDR_LEN] = {'s','e','r','v','1'};
-  Mirf.readRegister(TX_ADDR, addr, mirf_ADDR_LEN);
-  return memcmp(addr, orig, mirf_ADDR_LEN) == 0;
-}  

@@ -15,7 +15,8 @@ enum
 {
   COMMAND_LIST = 0,
   SET_CHANNEL = 4,
-  SET_PALEVEL = 5
+  SET_PALEVEL,
+  SET_DATARATE,
 };
 
 Console::Console()
@@ -42,8 +43,9 @@ void ShowCommands()
 {
   Serial.println("Available commands");
   Serial.println(" 0;                     - This command list");
-  Serial.println(" 4,<channel>;           - Set Channel Num (1-82)");
+  Serial.println(" 4,<channel>;           - Set Channel Num (0-84)");
   Serial.println(" 5,<PA level>;          - Set Power Amp Level (0=-18; 1=-12; 2=-6; 3=0)[dBm]");
+  Serial.println(" 6,<data rate>;         - Set Data Rate (0=.250; 1=1; 2=2)[Mbps]");
   Serial.println("Current values");
   OnGetAllValues();
 }
@@ -71,7 +73,7 @@ void OnSetChannel()
 {
   // todo: what happens if there is no arg?
   int val = cmdMessenger.readInt16Arg();
-  if (CheckBoundsInclusive(val, 1, 82)) {
+  if (CheckBoundsInclusive(val, 0, 84)) {
     settings.SetChannel(val);
     PrintSuccess(val, "Channel");
     QF::PUBLISH(Q_NEW(QEvt, UPDATE_PARAMS_SIG), &OnSetChannel);
@@ -101,6 +103,23 @@ void OnGetPALevel()
   Serial.println(settings.GetPALevel());
 }
 
+void OnSetDataRate()
+{
+  // todo: what happens if there is no arg?
+  int val = cmdMessenger.readInt16Arg();
+  if (CheckBoundsInclusive(val, 0, 2)) {
+    settings.SetDataRate(val);
+    PrintSuccess(val, "Data Rate");
+    QF::PUBLISH(Q_NEW(QEvt, UPDATE_PARAMS_SIG), &OnSetDataRate);
+  }    
+}
+
+void OnGetDataRate()
+{
+  Serial.print(" Data Rate: ");
+  Serial.println(settings.GetDataRate());
+}
+
 // Callback function that shows a list of commands
 void OnCommandList()
 {
@@ -112,9 +131,10 @@ void OnGetAllValues()
   OnGetVersionNumber();
   OnGetChannel();
   OnGetPALevel();
+  OnGetDataRate();
 }
 
-int CheckBoundsInclusive(long val, long min, long max)
+int CheckBoundsInclusive(int val, int min, int max)
 {
   if (val < min || val > max) {
     Serial.println(ERROR);
@@ -131,6 +151,7 @@ void Console::AttachCommandCallbacks()
   cmdMessenger.attach(COMMAND_LIST, OnCommandList);
   cmdMessenger.attach(SET_CHANNEL, OnSetChannel);
   cmdMessenger.attach(SET_PALEVEL, OnSetPALevel);
+  cmdMessenger.attach(SET_DATARATE, OnSetDataRate);
 }
 
 
