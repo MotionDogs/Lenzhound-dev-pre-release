@@ -7,12 +7,12 @@
 #include "macros.h"
 #include "receiver.h"
 #include "util.h"
+#include "constants.h"
 
-
-#define PLAYBACK_MODE 1
 #define MAX_VELOCITY 100
+#define MAX_ACCELERATION 100
 
-#define RATE_MASK     0b11111000
+#define RATE_MASK     0b00101000
 #define RATE_250KB    0b00100000
 #define RATE_1MB      0b00000000
 #define RATE_2MB      0b00001000
@@ -43,16 +43,16 @@ void Receiver::LoadSettings()
   byte reg[] =  {RF_DEFAULT,0}; 
   unsigned char setting = settings.GetPALevel();
   if (setting >= 0 && setting <= 3) {
-    reg[0] &= PALEVEL_MASK;
+    reg[0] &= ~PALEVEL_MASK;
     reg[0] |= levels[setting];
   }
   setting = settings.GetDataRate();
   if (setting >= 0 && setting <= 2) {
-    reg[0] &= RATE_MASK;
+    reg[0] &= ~RATE_MASK;
     reg[0] |= rates[setting];
   }
   setting = settings.GetChannel();
-  if (setting >= 0 && setting <= 84) {
+  if (setting >= 1 && setting <= 82) {
     Mirf.channel = setting;
   }
   setting = settings.GetAntenna();
@@ -85,9 +85,15 @@ long Receiver::Position(){
 }
 
 int Receiver::Velocity() {
-  if(packet_.mode==PLAYBACK_MODE)
+  if(packet_.mode==PLAYBACK_MODE || packet_.mode==Z_MODE)
     return packet_.velocity;
   return MAX_VELOCITY;
+}
+
+int Receiver::Acceleration() {
+  if(packet_.mode==Z_MODE)
+    return packet_.acceleration;
+  return MAX_ACCELERATION;
 }
 
 int Receiver::Mode(){

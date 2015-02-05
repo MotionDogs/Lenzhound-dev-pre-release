@@ -25,7 +25,7 @@ enum TxrTimeouts {
   FLASH_RATE_TOUT = BSP_TICKS_PER_SEC / 2,        // how quick to flash LED
   FLASH_DURATION_TOUT = BSP_TICKS_PER_SEC *2,     // how long to flash LED for
   ENTER_CALIBRATION_TOUT = BSP_TICKS_PER_SEC * 2, // how long to hold calibration button before reentering calibration
-  ALIVE_DURATION_TOUT = BSP_TICKS_PER_SEC / 2     // how long to flash the "I'm Aliave" LED
+  ALIVE_DURATION_TOUT = BSP_TICKS_PER_SEC * 5     // how often to check that transmitter is still powered (in case of low battery)
 };
 
 // todo: move this somewhere else or do differently
@@ -54,6 +54,8 @@ private:
   long mSavedPositions[NUM_POSITION_BUTTONS];
   EncVelManager mVelocityManager;
   unsigned char mPrevPositionButtonPressed;
+  char mZModeSavedVelocity;
+  char mZModeSavedAcceleration;
 
 public:
   Txr() : 
@@ -71,9 +73,12 @@ protected:
   static QP::QState flashing(Txr * const me, QP::QEvt const * const e);
   static QP::QState freeRun(Txr * const me, QP::QEvt const * const e);
   static QP::QState playBack(Txr * const me, QP::QEvt const * const e);
+  static QP::QState zmode(Txr * const me, QP::QEvt const * const e);
   void UpdatePosition(Txr *const me);
   void UpdatePositionCalibration(Txr *const me);  
+  void UpdatePositionZMode(Txr *const me);
   void UpdatePositionPlayBack(Txr *const me);  
+  void UpdateCalibrationMultiplier(int setting);
 };
 
 
@@ -114,12 +119,47 @@ void Txr::UpdatePosition(Txr *const me)
   BSP_UpdateRxProxy(me->mPacket);
 }
 
+void Txr::UpdatePositionZMode(Txr *const me)
+{
+  long newPos = BSP_GetPot();
+  // map the Position from Pot values to calibrated motor values
+  newPos = map(newPos, MIN_POT_VAL, MAX_POT_VAL, me->mCalibrationPos1, me->mCalibrationPos2);
+  newPos = me->averager.Roll(newPos);
+  
+  // only update the current position if it's not jittering between two values
+  if (newPos != me->mPrevPos && newPos != me->mCurPos) {
+    me->mPrevPos = me->mCurPos;
+    me->mCurPos = newPos;
+  }
+  
+  me->mPacket.position = me->mCurPos;
+  me->mPacket.velocity = me->mVelocityManager.GetVelocityPercent();
+  me->mVelocityManager.SetLEDs(false);
+  BSP_UpdateRxProxy(me->mPacket);
+}
+
 void Txr::UpdatePositionPlayBack(Txr *const me)
 {
   me->mPacket.position = me->mCurPos;
   me->mPacket.velocity = me->mVelocityManager.GetVelocityPercent();
-  me->mVelocityManager.SetLEDs();
+  me->mVelocityManager.SetLEDs(false);
   BSP_UpdateRxProxy(me->mPacket);
+}
+
+void Txr::UpdateCalibrationMultiplier(int setting)
+{
+  switch (setting) {
+    case PLAYBACK_MODE:
+      mCalibrationMultiplier = 40;
+      break;
+    case Z_MODE:
+      mCalibrationMultiplier = 80;
+      break;
+    case FREE_MODE:
+    default:
+      mCalibrationMultiplier = 8;
+      break;
+  }
 }
 
 QP::QState Txr::initial(Txr * const me, QP::QEvt const * const e) {
@@ -127,6 +167,8 @@ QP::QState Txr::initial(Txr * const me, QP::QEvt const * const e) {
   me->mCurPos = 0;
   me->mPrevEncoderCnt = 0;
   me->mPacket.position = 0;
+  me->mZModeSavedVelocity = 50;
+  me->mZModeSavedAcceleration = 100;
   me->subscribe(ENC_DOWN_SIG);
   me->subscribe(ENC_UP_SIG);
   me->subscribe(PLAY_MODE_SIG);
@@ -154,7 +196,12 @@ QP::QState Txr::on(Txr * const me, QP::QEvt const * const e) {
     }
     case ALIVE_SIG:
     {
-      GREEN2_LED_TOGGLE();
+      if (BSP_IsRadioAlive()) {
+        GREEN2_LED_OFF();
+      }        
+      else {
+        GREEN2_LED_ON();
+      }
       status_ = Q_HANDLED();
       break;
     }
@@ -181,6 +228,8 @@ QP::QState Txr::uncalibrated(Txr * const me, QP::QEvt const * const e) {
       ENC_RED_LED_ON();
       ENC_GREEN_LED_OFF();
       me->mPacket.mode = FREE_MODE;
+      me->mPrevEncoderCnt = BSP_GetEncoder();
+      me->UpdateCalibrationMultiplier(BSP_GetMode());
       status_ = Q_HANDLED();
       break;
     }
@@ -211,19 +260,19 @@ QP::QState Txr::uncalibrated(Txr * const me, QP::QEvt const * const e) {
     }
     case PLAY_MODE_SIG: 
     {
-      me->mCalibrationMultiplier = 40;
+      me->UpdateCalibrationMultiplier(PLAYBACK_MODE);
       status_ = Q_HANDLED(); 
       break;
     }
     case Z_MODE_SIG: 
     {
-      me->mCalibrationMultiplier = 80;
+      me->UpdateCalibrationMultiplier(Z_MODE);
       status_ = Q_HANDLED(); 
       break;
     }
     case FREE_MODE_SIG: 
     {
-      me->mCalibrationMultiplier = 8;
+      me->UpdateCalibrationMultiplier(FREE_MODE);
       status_ = Q_HANDLED(); 
       break;
     }
@@ -281,7 +330,7 @@ QP::QState Txr::calibrated(Txr * const me, QP::QEvt const * const e) {
     }
     case Z_MODE_SIG:
     {
-      status_ = Q_TRAN(&playBack);
+      status_ = Q_TRAN(&zmode);
       break;
     }
     case FREE_MODE_SIG:
@@ -327,7 +376,10 @@ QP::QState Txr::flashing(Txr * const me, QP::QEvt const * const e) {
       if (me->mEncPushes >= 2) {
         if (FREESWITCH_ON()) {
           status_ = Q_TRAN(&freeRun);
-        }  
+        } 
+        else if (ZSWITCH_ON()) {
+          status_ = Q_TRAN(&zmode);
+        }
         else {        
           status_ = Q_TRAN(&playBack);
         }        
@@ -382,12 +434,11 @@ QP::QState Txr::freeRun(Txr * const me, QP::QEvt const * const e) {
     }
     case POSITION_BUTTON_SIG:
     {
-      me->mPrevPositionButtonPressed = ((PositionButtonEvt*)e)->ButtonNum;
-      Q_REQUIRE(me->mPrevPositionButtonPressed < NUM_POSITION_BUTTONS);
-      me->mSavedPositions[me->mPrevPositionButtonPressed] = me->mCurPos;
-      
-      // only flash LED if not already flashing another LED
+      // only save position if finished flashing from previous save
       if (me->mFlashTimeout.ctr() == 0) {
+        me->mPrevPositionButtonPressed = ((PositionButtonEvt*)e)->ButtonNum;
+        Q_REQUIRE(me->mPrevPositionButtonPressed < NUM_POSITION_BUTTONS);
+        me->mSavedPositions[me->mPrevPositionButtonPressed] = me->mCurPos;
         BSP_TurnOnSpeedLED(me->mPrevPositionButtonPressed);
         me->mFlashTimeout.postIn(me, FLASH_RATE_TOUT);
       }
@@ -420,7 +471,7 @@ QP::QState Txr::playBack(Txr * const me, QP::QEvt const * const e) {
       ENC_RED_LED_ON();
       me->mPacket.mode = PLAYBACK_MODE;
       me->mPacket.position = me->mCurPos;
-      me->mVelocityManager.Init();
+      me->mVelocityManager.Init(50); // init at 50% speed
       status_ = Q_HANDLED();
       break;
     }
@@ -453,5 +504,47 @@ QP::QState Txr::playBack(Txr * const me, QP::QEvt const * const e) {
   return status_;
 }
 
-
-
+QP::QState Txr::zmode(Txr * const me, QP::QEvt const * const e) {
+  QP::QState status_;
+  switch (e->sig) {
+    case Q_ENTRY_SIG: 
+    {
+      ENC_GREEN_LED_ON();
+      ENC_RED_LED_ON();
+      me->mPacket.mode = Z_MODE;
+      me->mPacket.position = me->mCurPos;
+      me->mPacket.acceleration = me->mZModeSavedAcceleration;
+      me->mVelocityManager.Init(me->mZModeSavedVelocity);
+      status_ = Q_HANDLED();
+      break;
+    }
+    case Q_EXIT_SIG: 
+    {
+      me->mVelocityManager.SetAllLEDsOff();
+      me->mZModeSavedVelocity = me->mVelocityManager.GetVelocityPercent();
+      status_ = Q_HANDLED();
+      break;
+    }
+    case SEND_TIMEOUT_SIG: 
+    {
+      me->UpdatePositionZMode(me);
+      status_ = Q_HANDLED(); 
+      break;
+    }
+    case POSITION_BUTTON_SIG:
+    {
+      int buttonNum = ((PositionButtonEvt*)e)->ButtonNum;
+      Q_REQUIRE(buttonNum < NUM_POSITION_BUTTONS);
+      me->mZModeSavedAcceleration = (buttonNum+1)*25;  // 25, 50, 75, or 100%
+      me->mPacket.acceleration = me->mZModeSavedAcceleration;
+      status_ = Q_HANDLED();
+      break;
+    }
+    default: 
+    {
+      status_ = Q_SUPER(&calibrated);
+      break;
+    }
+  }
+  return status_;
+}

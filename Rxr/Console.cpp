@@ -5,26 +5,20 @@
 CmdMessenger cmdMessenger = CmdMessenger(Serial);
 static Settings settings;
 static const char SUCCESS[] = "SUCCESS";
+static const char ERROR[] = "ERROR";
 
 // This is the list of recognized commands.  
 // In order to receive, attach a callback function to these events
 enum
 {
-  COMMAND_LIST, 
-  SET_MAX_VEL, 
-  GET_MAX_VEL,
-  SET_ACCEL,
-  GET_ACCEL,
-  SET_RESOLUTION,
-  GET_RESOLUTION,
-  SET_ANTENNA,
-  GET_ANTENNA,
-  SET_CHANNEL,
-  GET_CHANNEL,
-  SET_PALEVEL,
-  GET_PALEVEL,
-  SET_DATARATE,
-  GET_DATARATE
+  COMMAND_LIST = 0, 
+  SET_MAX_VEL = 1, 
+  SET_ACCEL = 2,
+  SET_ANTENNA = 3,
+  SET_CHANNEL = 4,
+  SET_PALEVEL = 5,
+  SET_ZMODE_MAX_VEL = 7,
+  SET_ZMODE_ACCEL = 8,
 };
 
 Console::Console()
@@ -50,21 +44,16 @@ void Console::Run()
 void ShowCommands() 
 {
   Serial.println("Available commands");
-  Serial.println(" 0;                     - This command list");
-  Serial.println(" 1,<max velocity>;      - Set Max Velocity");
-  Serial.println(" 2;                     - Get Max Velocity");
-  Serial.println(" 3,<acceleration>;      - Set Acceleration");
-  Serial.println(" 4;                     - Get Acceleration");
-  Serial.println(" 5,<resolution (0-3)>;  - Set Resolution");
-  Serial.println(" 6;                     - Get Resolution");
-  Serial.println(" 7,<antenna>;           - Set Antenna (0-integrated; 1-remote)");
-  Serial.println(" 8;                     - Get Antenna");
-  Serial.println(" 9,<channel>;           - Set Channel Num (0-84)");
-  Serial.println(" 10;                    - Get Channel");
-  Serial.println(" 11,<PA level>;         - Set Power Amp Level (0-3)");
-  Serial.println(" 12;                    - Get Power Amp Level");
-  Serial.println(" 13,<data rate>;        - Set Data Rate (0-2)");
-  Serial.println(" 14;                    - Get Data Rate");
+  Serial.println(" 0;                      - This command list");
+  Serial.println(" 1,<max velocity>;       - Set Max Velocity (10-48000)");
+  Serial.println(" 2,<acceleration>;       - Set Acceleration (1-32000)");
+  Serial.println(" 3,<antenna>;            - Set Antenna (0=integrated; 1=remote)");
+  Serial.println(" 4,<channel>;            - Set Channel Num (1-82)");
+  Serial.println(" 5,<PA level>;           - Set Power Amp Level (0=-18; 1=-12; 2=-6; 3=0)[dBm]");
+  Serial.println(" 7,<zmode max velocity>; - Set ZMode Max Velocity (10-48000)");
+  Serial.println(" 8,<zmode acceleration>; - Set ZMode Acceleration (1-32000)");
+  Serial.println("Current values");
+  OnGetAllValues();
 }
 
 void OnUnknownCommand()
@@ -73,17 +62,32 @@ void OnUnknownCommand()
   ShowCommands();
 }
 
+void PrintSuccess(long val, String param)
+{
+  Serial.print(param);
+  Serial.print(": ");
+  Serial.println(val);
+}
+
+void OnGetVersionNumber()
+{
+  Serial.print(" Version: ");
+  Serial.println(CURRENT_VERSION);
+}
+
 void OnSetMaxVel()
 {
   // todo: what happens if there is no arg?
   long val = cmdMessenger.readInt32Arg();
-  settings.SetMaxVelocity(val);
-  Serial.println(SUCCESS);
+  if (CheckBoundsInclusive(val, 10, 48000)) {
+    settings.SetMaxVelocity(val);
+    PrintSuccess(val, "MaxVel");
+  }  
 }
 
 void OnGetMaxVel()
 {
-  Serial.print("Max Vel: ");
+  Serial.print(" Max Vel: ");
   Serial.println(settings.GetMaxVelocity());
 }
 
@@ -91,41 +95,31 @@ void OnSetAccel()
 {
   // todo: what happens if there is no arg?
   long val = cmdMessenger.readInt32Arg();
-  settings.SetAcceleration(val);
-  Serial.println(SUCCESS);
+  if (CheckBoundsInclusive(val, 1, 32000)) {
+    settings.SetAcceleration(val);
+    PrintSuccess(val, "Accel");
+  }  
 }
 
 void OnGetAccel()
 {
-  Serial.print("Accel: ");
+  Serial.print(" Accel: ");
   Serial.println(settings.GetAcceleration());
-}
-
-void OnSetResolution()
-{
-  // todo: what happens if there is no arg?
-  int val = cmdMessenger.readInt16Arg();
-  settings.SetMicrosteps(val);
-  Serial.println(SUCCESS);
-}
-
-void OnGetResolution()
-{
-  Serial.print("Resolution: ");
-  Serial.println(settings.GetMicrosteps());
 }
 
 void OnSetAntenna()
 {
   // todo: what happens if there is no arg?
   int val = cmdMessenger.readInt16Arg();
-  settings.SetAntenna(val);
-  Serial.println(SUCCESS);
+  if (CheckBoundsInclusive(val, 0, 1)) {
+    settings.SetAntenna(val);
+    PrintSuccess(val, "Antenna");
+  }  
 }
 
 void OnGetAntenna()
 {
-  Serial.print("Antenna: ");
+  Serial.print(" Antenna: ");
   Serial.println(settings.GetAntenna());
 }
 
@@ -133,13 +127,15 @@ void OnSetChannel()
 {
   // todo: what happens if there is no arg?
   int val = cmdMessenger.readInt16Arg();
-  settings.SetChannel(val);
-  Serial.println(SUCCESS);
+  if (CheckBoundsInclusive(val, 1, 82)) {
+    settings.SetChannel(val);
+    PrintSuccess(val, "Channel");
+  }  
 }
 
 void OnGetChannel()
 {
-  Serial.print("Channel: ");
+  Serial.print(" Channel: ");
   Serial.println(settings.GetChannel());
 }
 
@@ -147,34 +143,75 @@ void OnSetPALevel()
 {
   // todo: what happens if there is no arg?
   int val = cmdMessenger.readInt16Arg();
-  settings.SetPALevel(val);
-  Serial.println(SUCCESS);
+  if (CheckBoundsInclusive(val, 0, 3)) {
+    settings.SetPALevel(val);
+    PrintSuccess(val, "PA Level");
+  }  
 }
 
 void OnGetPALevel()
 {
-  Serial.print("PA Level: ");
+  Serial.print(" PA Level: ");
   Serial.println(settings.GetPALevel());
 }
 
-void OnSetDataRate()
+void OnSetZModeMaxVel()
 {
   // todo: what happens if there is no arg?
-  int val = cmdMessenger.readInt16Arg();
-  settings.SetDataRate(val);
-  Serial.println(SUCCESS);
+  long val = cmdMessenger.readInt32Arg();
+  if (CheckBoundsInclusive(val, 10, 48000)) {
+    settings.SetZModeMaxVelocity(val);
+    PrintSuccess(val, "ZMode MaxVel");
+  }  
 }
 
-void OnGetDataRate()
+void OnGetZModeMaxVel()
 {
-  Serial.print("Data Rate: ");
-  Serial.println(settings.GetDataRate());
+  Serial.print(" ZMode Max Vel: ");
+  Serial.println(settings.GetZModeMaxVelocity());
+}
+
+void OnSetZModeAccel()
+{
+  // todo: what happens if there is no arg?
+  long val = cmdMessenger.readInt32Arg();
+  if (CheckBoundsInclusive(val, 1, 32000)) {
+    settings.SetZModeAcceleration(val);
+    PrintSuccess(val, "ZMode Accel");
+  }  
+}
+
+void OnGetZModeAccel()
+{
+  Serial.print(" ZMode Accel: ");
+  Serial.println(settings.GetZModeAcceleration());
 }
 
 // Callback function that shows a list of commands
 void OnCommandList()
 {
   ShowCommands();
+}
+
+void OnGetAllValues()
+{
+  OnGetVersionNumber();
+  OnGetMaxVel();
+  OnGetAccel();
+  OnGetAntenna();
+  OnGetChannel();
+  OnGetPALevel();
+  OnGetZModeMaxVel();
+  OnGetZModeAccel();
+}
+
+int CheckBoundsInclusive(long val, long min, long max)
+{
+  if (val < min || val > max) {
+    Serial.println(ERROR);
+    return false;
+  }
+  return true;
 }
 
 // Callbacks define on which received commands we take action
@@ -184,21 +221,10 @@ void Console::AttachCommandCallbacks()
   cmdMessenger.attach(OnUnknownCommand);
   cmdMessenger.attach(COMMAND_LIST, OnCommandList);
   cmdMessenger.attach(SET_MAX_VEL, OnSetMaxVel);
-  cmdMessenger.attach(GET_MAX_VEL, OnGetMaxVel);
   cmdMessenger.attach(SET_ACCEL, OnSetAccel);
-  cmdMessenger.attach(GET_ACCEL, OnGetAccel);
-  cmdMessenger.attach(SET_RESOLUTION, OnSetResolution);
-  cmdMessenger.attach(GET_RESOLUTION, OnGetResolution);
-  cmdMessenger.attach(GET_ANTENNA, OnGetAntenna);
   cmdMessenger.attach(SET_ANTENNA, OnSetAntenna);
   cmdMessenger.attach(SET_CHANNEL, OnSetChannel);
-  cmdMessenger.attach(GET_CHANNEL, OnGetChannel);
   cmdMessenger.attach(SET_PALEVEL, OnSetPALevel);
-  cmdMessenger.attach(GET_PALEVEL, OnGetPALevel);
-  cmdMessenger.attach(SET_DATARATE, OnSetDataRate);
-  cmdMessenger.attach(GET_DATARATE, OnGetDataRate);
+  cmdMessenger.attach(SET_ZMODE_MAX_VEL, OnSetZModeMaxVel);
+  cmdMessenger.attach(SET_ZMODE_ACCEL, OnSetZModeAccel);
 }
-
-
-
-
