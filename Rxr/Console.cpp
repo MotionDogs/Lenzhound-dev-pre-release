@@ -11,13 +11,14 @@ static const char ERROR[] = "ERROR";
 // In order to receive, attach a callback function to these events
 enum
 {
-  COMMAND_LIST, 
-  SET_MAX_VEL, 
-  SET_ACCEL,
-  SET_ANTENNA,
-  SET_CHANNEL,
-  SET_PALEVEL,
-  SET_DATARATE,
+  COMMAND_LIST = 0, 
+  SET_MAX_VEL = 1, 
+  SET_ACCEL = 2,
+  SET_ANTENNA = 3,
+  SET_CHANNEL = 4,
+  SET_PALEVEL = 5,
+  SET_ZMODE_MAX_VEL = 7,
+  SET_ZMODE_ACCEL = 8,
 };
 
 Console::Console()
@@ -43,13 +44,14 @@ void Console::Run()
 void ShowCommands() 
 {
   Serial.println("Available commands");
-  Serial.println(" 0;                     - This command list");
-  Serial.println(" 1,<max velocity>;      - Set Max Velocity");
-  Serial.println(" 2,<acceleration>;      - Set Acceleration");
-  Serial.println(" 3,<antenna>;           - Set Antenna (0=integrated; 1=remote)");
-  Serial.println(" 4,<channel>;           - Set Channel Num (0-84)");
-  Serial.println(" 5,<PA level>;          - Set Power Amp Level (0=-18; 1=-12; 2=-6; 3=0)[dBm]");
-  Serial.println(" 6,<data rate>;         - Set Data Rate (0=.250; 1=1; 2=2)[Mbps]");
+  Serial.println(" 0;                      - This command list");
+  Serial.println(" 1,<max velocity>;       - Set Max Velocity (10-48000)");
+  Serial.println(" 2,<acceleration>;       - Set Acceleration (1-32000)");
+  Serial.println(" 3,<antenna>;            - Set Antenna (0=integrated; 1=remote)");
+  Serial.println(" 4,<channel>;            - Set Channel Num (1-82)");
+  Serial.println(" 5,<PA level>;           - Set Power Amp Level (0=-18; 1=-12; 2=-6; 3=0)[dBm]");
+  Serial.println(" 7,<zmode max velocity>; - Set ZMode Max Velocity (10-48000)");
+  Serial.println(" 8,<zmode acceleration>; - Set ZMode Acceleration (1-32000)");
   Serial.println("Current values");
   OnGetAllValues();
 }
@@ -77,7 +79,7 @@ void OnSetMaxVel()
 {
   // todo: what happens if there is no arg?
   long val = cmdMessenger.readInt32Arg();
-  if (CheckBoundsInclusive(val, 10, 32000)) {
+  if (CheckBoundsInclusive(val, 10, 48000)) {
     settings.SetMaxVelocity(val);
     PrintSuccess(val, "MaxVel");
   }  
@@ -125,7 +127,7 @@ void OnSetChannel()
 {
   // todo: what happens if there is no arg?
   int val = cmdMessenger.readInt16Arg();
-  if (CheckBoundsInclusive(val, 0, 84)) {
+  if (CheckBoundsInclusive(val, 1, 82)) {
     settings.SetChannel(val);
     PrintSuccess(val, "Channel");
   }  
@@ -153,20 +155,36 @@ void OnGetPALevel()
   Serial.println(settings.GetPALevel());
 }
 
-void OnSetDataRate()
+void OnSetZModeMaxVel()
 {
   // todo: what happens if there is no arg?
-  int val = cmdMessenger.readInt16Arg();
-  if (CheckBoundsInclusive(val, 0, 2)) {
-    settings.SetDataRate(val);
-    PrintSuccess(val, "Data Rate");
-  }    
+  long val = cmdMessenger.readInt32Arg();
+  if (CheckBoundsInclusive(val, 10, 48000)) {
+    settings.SetZModeMaxVelocity(val);
+    PrintSuccess(val, "ZMode MaxVel");
+  }  
 }
 
-void OnGetDataRate()
+void OnGetZModeMaxVel()
 {
-  Serial.print(" Data Rate: ");
-  Serial.println(settings.GetDataRate());
+  Serial.print(" ZMode Max Vel: ");
+  Serial.println(settings.GetZModeMaxVelocity());
+}
+
+void OnSetZModeAccel()
+{
+  // todo: what happens if there is no arg?
+  long val = cmdMessenger.readInt32Arg();
+  if (CheckBoundsInclusive(val, 1, 32000)) {
+    settings.SetZModeAcceleration(val);
+    PrintSuccess(val, "ZMode Accel");
+  }  
+}
+
+void OnGetZModeAccel()
+{
+  Serial.print(" ZMode Accel: ");
+  Serial.println(settings.GetZModeAcceleration());
 }
 
 // Callback function that shows a list of commands
@@ -183,10 +201,11 @@ void OnGetAllValues()
   OnGetAntenna();
   OnGetChannel();
   OnGetPALevel();
-  OnGetDataRate();
+  OnGetZModeMaxVel();
+  OnGetZModeAccel();
 }
 
-int CheckBoundsInclusive(int val, int min, int max)
+int CheckBoundsInclusive(long val, long min, long max)
 {
   if (val < min || val > max) {
     Serial.println(ERROR);
@@ -206,9 +225,6 @@ void Console::AttachCommandCallbacks()
   cmdMessenger.attach(SET_ANTENNA, OnSetAntenna);
   cmdMessenger.attach(SET_CHANNEL, OnSetChannel);
   cmdMessenger.attach(SET_PALEVEL, OnSetPALevel);
-  cmdMessenger.attach(SET_DATARATE, OnSetDataRate);
+  cmdMessenger.attach(SET_ZMODE_MAX_VEL, OnSetZModeMaxVel);
+  cmdMessenger.attach(SET_ZMODE_ACCEL, OnSetZModeAccel);
 }
-
-
-
-
