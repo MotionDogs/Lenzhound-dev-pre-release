@@ -22,17 +22,7 @@ private:
 // to handlers
 // todo: look into a better way
 // todo: add range checks to all these
-void OnSetMaxVel();
-void OnGetMaxVel();
-void OnUnknownCommand();
 void OnCommandList();
-void ShowCommands();
-void OnSetAccel();
-void OnGetAccel();
-void OnSetDecel();
-void OnGetDecel();
-void OnSetAntenna();
-void OnGetAntenna();
 void OnSetChannel();
 void OnGetChannel();
 void OnSetPALevel();
