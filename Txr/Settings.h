@@ -12,10 +12,12 @@ class Settings
 {
 public:
   Settings();
+  //todo: this needs to be brought out into an event loop
   void SetChannel(int val);
   int GetChannel();
   void SetPALevel(int val);
   int GetPALevel();
+  void SetDataRate(int val);
   int GetDataRate();
 
 private:

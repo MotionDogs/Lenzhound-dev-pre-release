@@ -29,7 +29,14 @@ int Settings::GetPALevel()
   return val;
 }
 
+void Settings::SetDataRate(int val)
+{
+  eeprom::WriteInt16(DATA_RATE_LOC, val); 
+}
+
 int Settings::GetDataRate()
 {
-  return 0;
+  int val;
+  eeprom::ReadInt16(DATA_RATE_LOC, &val);
+  return val;
 }
