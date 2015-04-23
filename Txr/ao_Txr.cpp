@@ -15,6 +15,7 @@
 #include "Txr.h"
 #include "EncVelManager.h"
 #include "Arduino.h" // if I start having problems with RF24, consider removing this
+#include "Settings.h"
 
 Q_DEFINE_THIS_FILE
 
@@ -27,6 +28,8 @@ enum TxrTimeouts {
   ENTER_CALIBRATION_TOUT = BSP_TICKS_PER_SEC * 2, // how long to hold calibration button before reentering calibration
   ALIVE_DURATION_TOUT = BSP_TICKS_PER_SEC * 5     // how often to check that transmitter is still powered (in case of low battery)
 };
+
+static Settings settings;
 
 // todo: move this somewhere else or do differently
 long map(long x, long in_min, long in_max, long out_min, long out_max)
@@ -56,6 +59,7 @@ private:
   unsigned char mPrevPositionButtonPressed;
   char mZModeSavedVelocity;
   char mZModeSavedAcceleration;
+
 
 public:
   Txr() : 
@@ -178,6 +182,13 @@ QP::QState Txr::initial(Txr * const me, QP::QEvt const * const e) {
   me->subscribe(UPDATE_PARAMS_SIG);
   me->mSendTimeout.postEvery(me, SEND_ENCODER_TOUT);
   me->mAliveTimeout.postEvery(me, ALIVE_DURATION_TOUT);
+  me->mCalibrationPos1 = settings.GetCalPos1();
+  me->mCalibrationPos2 = settings.GetCalPos2();
+  if(me->mCalibrationPos1 && me->mCalibrationPos1)//!settings.GetStartInCal() for when we add settings tab to GUI
+  {
+    me->mEncPushes = 2;
+    return Q_TRAN(&flashing);
+  }
   return Q_TRAN(&uncalibrated);
 }
 
@@ -249,11 +260,13 @@ QP::QState Txr::uncalibrated(Txr * const me, QP::QEvt const * const e) {
       // if this is first time button press, just save the position
       if ((me->mEncPushes)++ == 0) {
         me->mCalibrationPos1 = me->mCurPos;
+        settings.SetCalPos1(me->mCalibrationPos1);
       }
       // if this is second time, determine whether swapping is necessary
       // to map higher calibrated position with higher motor position
       else {
         me->mCalibrationPos2 = me->mCurPos;
+        settings.SetCalPos2(me->mCalibrationPos2);
       }
       status_ = Q_TRAN(&flashing);
       break;
@@ -292,7 +305,7 @@ QP::QState Txr::calibrated(Txr * const me, QP::QEvt const * const e) {
     {
       // set all saved positions to within calibrated range
       for (int i=0; i<NUM_POSITION_BUTTONS; i++) {
-        me->mSavedPositions[i] = me->mCalibrationPos1;
+          me->mSavedPositions[i] = me->mCalibrationPos1;
       }
       status_ = Q_HANDLED();
       break;
@@ -359,6 +372,15 @@ QP::QState Txr::flashing(Txr * const me, QP::QEvt const * const e) {
       me->mFlashTimeout.postEvery(me, FLASH_RATE_TOUT);
       me->mCalibrationTimeout.postIn(me, FLASH_DURATION_TOUT);
       ledCnt = 0;
+      if (FREESWITCH_ON()) {
+          me->UpdatePosition(me); 
+        } 
+        else if (ZSWITCH_ON()) {
+          me->UpdatePositionZMode(me); 
+        }
+        else {        
+          me->UpdatePositionPlayBack(me); 
+        }   
       status_ = Q_HANDLED();
       break;
     }
@@ -439,6 +461,7 @@ QP::QState Txr::freeRun(Txr * const me, QP::QEvt const * const e) {
         me->mPrevPositionButtonPressed = ((PositionButtonEvt*)e)->ButtonNum;
         Q_REQUIRE(me->mPrevPositionButtonPressed < NUM_POSITION_BUTTONS);
         me->mSavedPositions[me->mPrevPositionButtonPressed] = me->mCurPos;
+        settings.SetSavedPos((int)me->mCurPos,me->mPrevPositionButtonPressed);
         BSP_TurnOnSpeedLED(me->mPrevPositionButtonPressed);
         me->mFlashTimeout.postIn(me, FLASH_RATE_TOUT);
       }

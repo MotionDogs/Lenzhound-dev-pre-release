@@ -27,6 +27,7 @@ void OnSetChannel();
 void OnGetChannel();
 void OnSetPALevel();
 void OnGetPALevel();
+void OnGetSavedPositions();
 void OnGetAllValues();
 int CheckBoundsInclusive(long val, long min, long max);
 void PrintSuccess(long val, String param);
