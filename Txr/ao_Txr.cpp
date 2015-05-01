@@ -184,10 +184,17 @@ QP::QState Txr::initial(Txr * const me, QP::QEvt const * const e) {
   me->mAliveTimeout.postEvery(me, ALIVE_DURATION_TOUT);
   me->mCalibrationPos1 = settings.GetCalPos1();
   me->mCalibrationPos2 = settings.GetCalPos2();
-  if(me->mCalibrationPos1 && me->mCalibrationPos1)//!settings.GetStartInCal() for when we add settings tab to GUI
+  if(me->mCalibrationPos1 && me->mCalibrationPos1)//&&!settings.GetStartInCal() for when we add settings tab to GUI
   {
-    me->mEncPushes = 2;
-    return Q_TRAN(&flashing);
+    if (FREESWITCH_ON()) {
+      return Q_TRAN(&freeRun);
+    } 
+    else if (ZSWITCH_ON()) {
+      return  Q_TRAN(&zmode);
+    }
+    else {        
+      return  Q_TRAN(&playBack);
+    }
   }
   return Q_TRAN(&uncalibrated);
 }
@@ -372,7 +379,7 @@ QP::QState Txr::flashing(Txr * const me, QP::QEvt const * const e) {
       me->mFlashTimeout.postEvery(me, FLASH_RATE_TOUT);
       me->mCalibrationTimeout.postIn(me, FLASH_DURATION_TOUT);
       ledCnt = 0;
-      if (FREESWITCH_ON()) {
+      /*if (FREESWITCH_ON()) {
           me->UpdatePosition(me); 
         } 
         else if (ZSWITCH_ON()) {
@@ -380,7 +387,7 @@ QP::QState Txr::flashing(Txr * const me, QP::QEvt const * const e) {
         }
         else {        
           me->UpdatePositionPlayBack(me); 
-        }   
+        }*/   
       status_ = Q_HANDLED();
       break;
     }
