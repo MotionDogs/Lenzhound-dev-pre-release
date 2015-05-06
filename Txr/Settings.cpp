@@ -71,6 +71,7 @@ void Settings::SetStartInCal(int startInCal)
 
 int Settings::GetStartInCal()
 {
+  return false;//this will be changed when we have an options menu
   int val;
   eeprom::ReadInt16(START_IN_CAL_LOC, &val);
   return val;

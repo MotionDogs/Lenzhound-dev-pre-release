@@ -184,8 +184,20 @@ QP::QState Txr::initial(Txr * const me, QP::QEvt const * const e) {
   me->mAliveTimeout.postEvery(me, ALIVE_DURATION_TOUT);
   me->mCalibrationPos1 = settings.GetCalPos1();
   me->mCalibrationPos2 = settings.GetCalPos2();
-  if(me->mCalibrationPos1 && me->mCalibrationPos1)//&&!settings.GetStartInCal() for when we add settings tab to GUI
+  if(!settings.GetStartInCal())//for when we add settings tab to GUI
   {
+    if(me->mCalibrationPos1 != 0){
+      // set all saved positions to within calibrated range
+      for (int i=0; i<NUM_POSITION_BUTTONS; i++) {
+          me->mSavedPositions[i] = settings.GetSavedPos(i) - me->mCalibrationPos1;
+          settings.SetSavedPos(me->mSavedPositions[i], i);
+      }
+      me->mCalibrationPos2 -= me->mCalibrationPos1;
+      me->mCalibrationPos1 = 0;
+      //settings.SetCalPos1(me->mCalibrationPos1);
+      //settings.SetCalPos2(me->mCalibrationPos2);
+    }
+    
     if (FREESWITCH_ON()) {
       return Q_TRAN(&freeRun);
     } 
@@ -310,10 +322,6 @@ QP::QState Txr::calibrated(Txr * const me, QP::QEvt const * const e) {
   switch (e->sig) {
     case Q_ENTRY_SIG:
     {
-      // set all saved positions to within calibrated range
-      for (int i=0; i<NUM_POSITION_BUTTONS; i++) {
-          me->mSavedPositions[i] = me->mCalibrationPos1;
-      }
       status_ = Q_HANDLED();
       break;
     }
